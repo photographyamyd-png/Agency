@@ -1,0 +1,1101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ===================== AUTH (Auth.js standard — admin) =====================
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ===================== [v2] CLIENT PORTAL AUTH =====================
+// Separate from admin Auth.js models. Clients log in with email + bcrypt password.
+// Admin credential vault is NEVER accessible from the client portal.
+
+model ClientPortalUser {
+  id             String                      @id @default(cuid())
+  clientId       String                      @unique
+  client         Client                      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  email          String                      @unique
+  passwordHash   String // bcrypt, min 12 rounds
+  lastLoginAt    DateTime?
+  loginFailures  Int                         @default(0)
+  lockedUntil    DateTime?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  passwordResets ClientPortalPasswordReset[]
+}
+
+model ClientPortalPasswordReset {
+  id        String           @id @default(cuid())
+  userId    String
+  user      ClientPortalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String           @unique // bcrypt hash of the raw token emailed to client
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+}
+
+model ClientPortalMagicLink {
+  id        String   @id @default(cuid())
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+// ===================== AGENCY / OWNER =====================
+model AgencyProfile {
+  id                       String   @id @default(cuid())
+  businessName             String
+  address                  String?
+  phone                    String?
+  email                    String?
+  logoUrl                  String?
+  heroImageUrl             String?
+  heroImageAlt             String?
+  servicesImages           Json? // { "WEBSITE": "url", "SEO": "url", "REPORTING": "url" }
+  resultsImages            Json? // string[] of case study / analytics screenshot URLs
+  tagline                  String?
+  heroHeadline             String?
+  heroSubhead              String?
+  autoOnboardWebsiteLeads  Boolean  @default(true)
+  defaultRevisionRounds    Int      @default(2)
+  defaultPaymentSchedule   Json? // e.g. [{ "label": "Deposit", "percent": 50 }, ...]
+  updatedAt                DateTime @updatedAt
+}
+
+model PricingMatrixItem {
+  id        String   @id @default(cuid())
+  name      String
+  category  String // "Website", "SEO Retainer", "Add-on"
+  basePrice Decimal
+  costBasis Decimal? // your internal cost, for margin calcs
+  unit      String   @default("flat") // flat, monthly, hourly, per-page
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model ApiConnection {
+  id            String    @id @default(cuid())
+  service       String // GOOGLE_SEARCH_CONSOLE, GOOGLE_BUSINESS_PROFILE, PAGESPEED, GA4, STRIPE, RESEND, GOOGLE_INDEXING
+  status        String    @default("DISCONNECTED") // CONNECTED, DISCONNECTED, ERROR
+  lastCheckedAt DateTime?
+  expiresAt     DateTime?
+  detail        String?
+}
+
+// ===================== [v2] SYSTEM EVENT BUS =====================
+// Every automation trigger writes a SystemEvent. Downstream handlers read the
+// event log to sync related metrics, update profiles, and keep all data
+// cross-connected. Never delete events — they are the audit trail.
+
+model SystemEvent {
+  id        String   @id @default(cuid())
+  type      String // See lib/events/types.ts for the full enum:
+  // FORM_SUBMITTED, CLIENT_CREATED, RANK_UPDATED,
+  // INVOICE_PAID, INVOICE_OVERDUE, DESIGN_APPROVED,
+  // DESIGN_REVISION_REQUESTED, PAGE_LAUNCHED,
+  // KEYWORD_CHANGED, REPORT_GENERATED, RENEWAL_ALERT,
+  // MAINTENANCE_CHECKLIST_CREATED, PORTAL_LOGIN,
+  // INDEX_SUBMITTED, INDEX_STATUS_UPDATED, etc.
+  clientId  String?
+  leadId    String?
+  payload   Json // structured data relevant to the event type
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+}
+
+// ===================== LEADS / PIPELINE =====================
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUESTIONNAIRE_SENT
+  QUESTIONNAIRE_COMPLETED
+  DISCOVERY_SCHEDULED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+model Lead {
+  id             String             @id @default(cuid())
+  businessName   String
+  contactName    String
+  email          String
+  phone          String?
+  website        String?
+  location       String?
+  serviceArea    String?
+  industry       String?
+  urgency        String?
+  budgetRange    String?
+  interestedIn   Json @default("[]") // string[] e.g. ["WEBSITE", "SEO_RETAINER"]
+  problemSummary String?
+  source         String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  status         LeadStatus         @default(NEW)
+  lossReason     String?
+  client              Client?
+  discoveryCall       DiscoveryCall?
+  tasks               Task[]
+  communications      CommunicationLog[]
+  onboardingSessions  OnboardingSession[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model DiscoveryCall {
+  id                 String    @id @default(cuid())
+  leadId             String    @unique
+  lead               Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  scheduledAt        DateTime?
+  completedAt        DateTime?
+  notes              String?
+  summary            String?
+  decisionMaker      Boolean?
+  responsivenessNote String?
+  painPoints         String?
+  seasonalPatterns   String?
+  topServices        String?
+  hasGBP             Boolean?
+  hasDomainAccess    Boolean?
+  hasAnalyticsAccess Boolean?
+  hasAdsAccount      Boolean?
+  fitDecision        String? // PROCEED, PAUSE, DECLINE
+}
+
+// ===================== CLIENT / BRAND PROFILE =====================
+enum ClientStatus {
+  ONBOARDING
+  ACTIVE_BUILD
+  ACTIVE_RETAINER
+  PAUSED
+  ARREARS
+  OFFBOARDED
+}
+
+model Client {
+  id                String       @id @default(cuid())
+  leadId            String?      @unique
+  lead              Lead?        @relation(fields: [leadId], references: [id])
+  legalBusinessName String
+  dba               String?
+  businessStructure String?
+  billingName       String?
+  billingEmail      String?
+  status            ClientStatus @default(ONBOARDING)
+  stripeCustomerId  String? // created on Client creation
+
+  brandProfile    BrandProfile?
+  competitors     Competitor[]
+  proposals       Proposal[]
+  accessItems     AccessChecklistItem[]
+  vaultEntries    CredentialVaultEntry[]
+  pages           PageNode[]
+  mediaAssets     MediaAsset[]
+  invoices        Invoice[]
+  domainRecords   DomainRecord[]
+  hostingRecords  HostingRecord[]
+  licenseRecords  LicenseRecord[]
+  revisionTickets RevisionTicket[]
+  keywords        Keyword[]
+  techHealthLogs  TechnicalHealthLog[]
+  citations       CitationRecord[]
+  reviewSnapshots ReviewSnapshot[]
+  contentItems    ContentCalendarItem[]
+  gbpActivity     GBPActivityLog[]
+  monthlyReports  MonthlyReport[]
+  actionPlanItems ActionPlanItem[]
+  baselineAudits  BaselineAudit[]
+  tasks           Task[]
+  communications  CommunicationLog[]
+  offboarding     OffboardingRecord?
+  dnsSnapshots    DNSSnapshot[]
+  launchChecklist LaunchChecklistItem[]
+  portalUser          ClientPortalUser? // [v2]
+  maintenanceLogs     MaintenanceChecklist[] // [v2]
+  systemEvents        SystemEvent[] // [v2] — virtual, filtered by clientId
+  integrations        ClientIntegration[]
+  metricSnapshots     MetricSnapshot[]
+  weeklyReports       WeeklyReport[]
+  onboardingSessions  OnboardingSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BrandProfile {
+  id                     String  @id @default(cuid())
+  clientId               String  @unique
+  client                 Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  addresses              Json? // [{ label, street, city, state, zip, isPublic }]
+  phonePrimary           String?
+  phoneTracking          String?
+  hours                  Json? // structured weekly hours + holiday overrides
+  industry               String?
+  gbpCategoryPrimary     String?
+  gbpCategoriesSecondary Json @default("[]")
+  serviceAreas           Json @default("[]")
+  targetAudience         String?
+  toneVoice              String?
+  exampleSites           Json @default("[]")
+  domain                 String?
+  domainStatus           String   @default("UNKNOWN") // UNKNOWN, NEEDS_REGISTRATION, CLIENT_OWNED, AGENCY_MANAGED
+  currentHost            String?
+  currentRegistrar       String?
+  existingSiteUrl        String?
+  existingSiteLikes      String?
+  existingSiteDislikes   String?
+  logoUrl                String?
+  brandGuideUrl          String?
+  colorPalette           Json?
+  fonts                  Json?
+  socialLinks            Json? // { facebook, instagram, linkedin, etc. }
+  reviewBaselines        Json? // [{ platform, rating, count, capturedAt }]
+  budgetRange            String?
+  timelineExpectation    String?
+  gscConnected           Boolean  @default(false)
+  ga4Connected           Boolean  @default(false)
+  gbpConnected           Boolean  @default(false)
+  ga4PropertyId          String?
+  gscSiteUrl             String?
+  // [v2] Keyword sync anchor — when primaryKeyword is updated here, a
+  // SystemEvent of type KEYWORD_CHANGED fires and all linked PageNode
+  // primaryKeyword references are flagged for review.
+  primaryKeyword    String?
+  lastKeywordSyncAt DateTime?
+}
+
+model Competitor {
+  id              String    @id @default(cuid())
+  clientId        String
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  url             String
+  title           String?
+  metaDescription String?
+  pageCount       Int?
+  pagespeedScore  Int?
+  snapshotAt      DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+// ===================== PROPOSALS / CONTRACTS =====================
+enum ProposalStatus {
+  DRAFT
+  SENT
+  SIGNED
+  EXPIRED
+}
+
+model Proposal {
+  id                 String             @id @default(cuid())
+  clientId           String
+  client             Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  version            Int                @default(1)
+  status             ProposalStatus     @default(DRAFT)
+  scopeIncluded      String?
+  scopeExcluded      String?
+  revisionRounds     Int                @default(2)
+  timelineEstimate   String?
+  paymentSchedule    Json? // [{ label, percent or amount, trigger }]
+  retainerTerms      Json? // { monthlyFee, cadence, noticePeriodDays, autoRenew }
+  lineItems          ProposalLineItem[]
+  signatureDataUrl   String?
+  signedAt           DateTime?
+  signedIp           String?
+  signToken          String?            @unique
+  signTokenExpiresAt DateTime?
+  pdfUrl             String?
+  invoices           Invoice[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model ProposalLineItem {
+  id          String   @id @default(cuid())
+  proposalId  String
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Decimal
+  total       Decimal
+}
+
+// ===================== ACCESS & CREDENTIAL VAULT =====================
+// SECURITY: Credential vault is admin-only. Never expose to client portal.
+enum AccessSystemType {
+  CMS_ADMIN
+  DOMAIN_REGISTRAR
+  HOSTING
+  DNS
+  GA4
+  SEARCH_CONSOLE
+  GBP
+  GOOGLE_ADS
+  EMAIL
+  FORM_SYSTEM
+  CRM
+  PAYMENT_PROCESSOR
+  IMAGE_LIBRARY
+  SOCIAL
+  OTHER
+}
+
+enum AccessStatus {
+  NOT_REQUESTED
+  REQUESTED
+  RECEIVED
+  TESTED
+  EXPIRED
+  NEEDS_RENEWAL
+}
+
+model AccessChecklistItem {
+  id          String           @id @default(cuid())
+  clientId    String
+  client      Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  systemType  AccessSystemType
+  label       String
+  status      AccessStatus     @default(NOT_REQUESTED)
+  notes       String?
+  requestedAt DateTime?
+  receivedAt  DateTime?
+  testedAt    DateTime?
+}
+
+model CredentialVaultEntry {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  label          String
+  url            String?
+  usernameEnc    String? // AES-256-GCM ciphertext
+  passwordEnc    String? // AES-256-GCM ciphertext
+  notesEnc       String? // AES-256-GCM ciphertext
+  keyVersion     Int       @default(1)
+  revoked        Boolean   @default(false) // set true during offboarding
+  lastAccessedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model VaultAccessLog {
+  id        String   @id @default(cuid())
+  entryId   String
+  action    String // VIEW, DECRYPT, UPDATE
+  createdAt DateTime @default(now())
+}
+
+// ===================== SITEMAP / PAGES =====================
+enum PageType {
+  HOMEPAGE
+  SERVICE
+  LOCATION
+  ABOUT
+  CONTACT
+  BLOG
+  OTHER
+}
+
+enum PageStatus {
+  PLANNED
+  WIREFRAME
+  DESIGN
+  BUILD
+  SEO
+  QA
+  LIVE
+}
+
+model PageNode {
+  id               String             @id @default(cuid())
+  clientId         String
+  client           Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  parentId         String?
+  parent           PageNode?          @relation("PageHierarchy", fields: [parentId], references: [id])
+  children         PageNode[]         @relation("PageHierarchy")
+  name             String
+  slug             String
+  pageType         PageType           @default(OTHER)
+  primaryKeywordId String?
+  primaryKeyword   Keyword?           @relation(fields: [primaryKeywordId], references: [id])
+  status           PageStatus         @default(PLANNED)
+  order            Int                @default(0)
+  // [v2] Google index tracking
+  indexSubmittedAt DateTime? // when URL was submitted to GSC Indexing API
+  indexConfirmedAt DateTime? // when Google confirmed indexing (manual or API)
+  indexStatus      String             @default("NOT_SUBMITTED") // NOT_SUBMITTED, SUBMITTED, INDEXED, ERROR
+  designAssets     DesignAsset[]
+  mediaAssets      MediaAsset[]
+  seoItems         SEOChecklistItem[]
+  schemaItems      SchemaMarkup[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+// ===================== WIREFRAMES / DESIGN =====================
+enum DesignAssetType {
+  WIREFRAME
+  DESIGN
+}
+
+enum DesignAssetStatus {
+  PENDING
+  APPROVED
+  REVISION_REQUESTED
+}
+
+model DesignAsset {
+  id                   String            @id @default(cuid())
+  pageNodeId           String
+  pageNode             PageNode          @relation(fields: [pageNodeId], references: [id], onDelete: Cascade)
+  type                 DesignAssetType
+  fileUrl              String?
+  externalLink         String? // Figma/Excalidraw link
+  version              Int               @default(1)
+  status               DesignAssetStatus @default(PENDING)
+  reviewToken          String?           @unique
+  reviewTokenExpiresAt DateTime?
+  approvedAt           DateTime?
+  feedback             DesignFeedback[]
+  createdAt            DateTime          @default(now())
+}
+
+model DesignFeedback {
+  id            String      @id @default(cuid())
+  designAssetId String
+  designAsset   DesignAsset @relation(fields: [designAssetId], references: [id], onDelete: Cascade)
+  comment       String
+  positionX     Float?
+  positionY     Float?
+  resolved      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+}
+
+// ===================== MEDIA ASSETS =====================
+enum MediaRole {
+  HERO
+  GALLERY_THUMB
+  GALLERY_FULL
+  HEADSHOT
+  BLOG_INLINE
+  LOGO
+  OTHER
+}
+
+enum MediaStatus {
+  UPLOADED
+  TRIAGED
+  ASSIGNED
+  OPTIMIZED
+  LIVE
+  ARCHIVED
+}
+
+model MediaAsset {
+  id               String      @id @default(cuid())
+  clientId         String
+  client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  pageNodeId       String?
+  pageNode         PageNode?   @relation(fields: [pageNodeId], references: [id])
+  placementZone    String? // "hero", "gallery-3", "footer-logo"
+  originalFilename String
+  originalUrl      String
+  optimizedUrl     String?
+  role             MediaRole?
+  altText          String?
+  widthPx          Int?
+  heightPx         Int?
+  fileSizeBytes    Int?
+  format           String? // webp, jpeg, png
+  status           MediaStatus @default(UPLOADED)
+  replacesAssetId  String?
+  uploadBatchNote  String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+// ===================== SEO CHECKLIST =====================
+enum SEOCategory {
+  METADATA
+  SCHEMA
+  HEADINGS
+  IMAGES
+  SPEED
+  MOBILE
+  LINKING
+  SECURITY
+  NAP
+}
+
+enum ChecklistStatus {
+  PENDING
+  DONE
+  NA
+}
+
+model SEOChecklistItem {
+  id         String          @id @default(cuid())
+  pageNodeId String
+  pageNode   PageNode        @relation(fields: [pageNodeId], references: [id], onDelete: Cascade)
+  category   SEOCategory
+  itemKey    String // stable key, e.g. "title_tag", "meta_description", "alt_text_complete"
+  label      String
+  status     ChecklistStatus @default(PENDING)
+  value      Json? // e.g. { "titleTag": "...", "charCount": 58 }
+  checkedAt  DateTime?
+
+  @@unique([pageNodeId, itemKey])
+}
+
+model SchemaMarkup {
+  id          String    @id @default(cuid())
+  pageNodeId  String
+  pageNode    PageNode  @relation(fields: [pageNodeId], references: [id], onDelete: Cascade)
+  type        String // LocalBusiness, Organization, BreadcrumbList, Service, FAQPage, Review, Article
+  jsonLd      Json
+  validated   Boolean   @default(false)
+  validatedAt DateTime?
+}
+
+// ===================== LAUNCH / DNS =====================
+model DNSSnapshot {
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  recordType String // MX, TXT, A, CNAME, NS
+  name       String
+  value      String
+  ttl        Int?
+  capturedAt DateTime @default(now())
+}
+
+model LaunchChecklistItem {
+  id          String          @id @default(cuid())
+  clientId    String
+  client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  label       String
+  status      ChecklistStatus @default(PENDING)
+  completedAt DateTime?
+  order       Int             @default(0)
+}
+
+// ===================== [v2] MONTHLY MAINTENANCE CHECKLIST =====================
+// Auto-generated on the 1st of each month for every ACTIVE_BUILD and ACTIVE_RETAINER
+// client. Covers SEO health tasks, payment review, renewal check, and index status.
+// Clients can view their checklist (read-only) in the client portal.
+
+model MaintenanceChecklist {
+  id          String                     @id @default(cuid())
+  clientId    String
+  client      Client                     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  periodMonth Int // 1–12
+  periodYear  Int
+  items       MaintenanceChecklistItem[]
+  generatedAt DateTime                   @default(now())
+  completedAt DateTime?
+
+  @@unique([clientId, periodMonth, periodYear])
+}
+
+model MaintenanceChecklistItem {
+  id            String               @id @default(cuid())
+  checklistId   String
+  checklist     MaintenanceChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  category      String // SEO, PAYMENT, RENEWAL, INDEX, TECHNICAL, CONTENT, GBP
+  label         String
+  notes         String?
+  status        ChecklistStatus      @default(PENDING)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  autoGenerated Boolean              @default(true)
+  order         Int                  @default(0)
+}
+
+// ===================== FINANCIAL =====================
+enum InvoiceType {
+  DEPOSIT
+  MILESTONE
+  FINAL
+  RETAINER
+  ONE_OFF
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+model Invoice {
+  id              String            @id @default(cuid())
+  clientId        String
+  client          Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  proposalId      String?
+  proposal        Proposal?         @relation(fields: [proposalId], references: [id])
+  type            InvoiceType
+  status          InvoiceStatus     @default(DRAFT)
+  issueDate       DateTime          @default(now())
+  dueDate         DateTime?
+  totalAmount     Decimal
+  amountPaid      Decimal           @default(0)
+  currency        String            @default("CAD")
+  stripePaymentLinkId String?
+  stripeCheckoutSessionId String?
+  lineItems       InvoiceLineItem[]
+  payments        Payment[]
+  dunningStage    Int               @default(0) // 0=none, 1=3day, 2=7day, 3=14day
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Decimal
+  total       Decimal
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  invoiceId             String
+  invoice               Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount                Decimal
+  method                String? // stripe_card, stripe_ach, paypal, manual
+  stripePaymentIntentId String?
+  paidAt                DateTime @default(now())
+}
+
+model DomainRecord {
+  id               String    @id @default(cuid())
+  clientId         String
+  client           Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  domainName       String
+  registrar        String?
+  registrationDate DateTime?
+  renewalDate      DateTime?
+  ourCost          Decimal?
+  billedAmount     Decimal?
+  ownedBy          String    @default("AGENCY") // AGENCY, CLIENT
+  autoRenew        Boolean   @default(true)
+}
+
+model HostingRecord {
+  id           String    @id @default(cuid())
+  clientId     String
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  provider     String
+  plan         String?
+  renewalDate  DateTime?
+  ourCost      Decimal?
+  billedAmount Decimal?
+}
+
+model LicenseRecord {
+  id           String    @id @default(cuid())
+  clientId     String
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name         String // e.g. "Premium theme license", "Stock photo subscription"
+  type         String?
+  renewalDate  DateTime?
+  ourCost      Decimal?
+  billedAmount Decimal?
+}
+
+// ===================== REVISIONS =====================
+enum RevisionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  REJECTED_OUT_OF_SCOPE
+}
+
+model RevisionTicket {
+  id          String         @id @default(cuid())
+  clientId    String
+  client      Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  roundNumber Int
+  maxRounds   Int
+  description String
+  status      RevisionStatus @default(OPEN)
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+}
+
+// ===================== RETAINER / SEO TRACKING =====================
+// Keywords are shared records — changing a keyword here propagates to all
+// linked PageNodes and ContentCalendarItems via the SystemEvent bus. [v2]
+model Keyword {
+  id            String                @id @default(cuid())
+  clientId      String
+  client        Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  term          String
+  searchVolume  Int?
+  difficulty    Int?
+  pages         PageNode[]
+  rankSnapshots RankSnapshot[]
+  contentItems  ContentCalendarItem[] // [v2] — linked for automatic content sync
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt // [v2] — triggers KEYWORD_CHANGED event on update
+}
+
+model RankSnapshot {
+  id          String   @id @default(cuid())
+  keywordId   String
+  keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  rank        Int?
+  source      String   @default("GSC")
+  clicks      Int?
+  impressions Int?
+  ctr         Float?
+  pageUrl     String?
+  capturedAt  DateTime @default(now())
+}
+
+model TechnicalHealthLog {
+  id               String   @id @default(cuid())
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  capturedAt       DateTime @default(now())
+  pagespeedScores  Json? // { "/": 92, "/about": 88, ... }
+  lcp              Float?
+  inp              Float?
+  cls              Float?
+  brokenLinksCount Int?
+  uptimePercent    Float?
+  sslExpiryDate    DateTime?
+}
+
+model CitationRecord {
+  id            String    @id @default(cuid())
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  directory     String // "Apple Maps", "Bing Places", "Yelp", etc.
+  status        String    @default("NOT_STARTED") // NOT_STARTED, SUBMITTED, LIVE, NEEDS_UPDATE
+  url           String?
+  lastCheckedAt DateTime?
+}
+
+model ReviewSnapshot {
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  platform   String
+  rating     Float?
+  count      Int?
+  capturedAt DateTime @default(now())
+}
+
+model ContentCalendarItem {
+  id              String    @id @default(cuid())
+  clientId        String
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title           String
+  type            String // BLOG, LOCATION_PAGE, SERVICE_PAGE_UPDATE
+  targetKeywordId String?
+  targetKeyword   Keyword?  @relation(fields: [targetKeywordId], references: [id]) // [v2]
+  status          String    @default("PLANNED") // PLANNED, DRAFTED, APPROVED, PUBLISHED
+  publishedAt     DateTime?
+  url             String?
+}
+
+model GBPActivityLog {
+  id       String   @id @default(cuid())
+  clientId String
+  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type     String // POST, QA_RESPONSE, REVIEW_RESPONSE
+  content  String?
+  postedAt DateTime @default(now())
+}
+
+model MonthlyReport {
+  id          String    @id @default(cuid())
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  summary     String?
+  dataJson    Json?
+  pdfUrl      String?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model BaselineAudit {
+  id         String   @id @default(cuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  capturedAt DateTime @default(now())
+  dataJson   Json // rankings, traffic, CWV, citations, reviews, backlinks, on-page issues, competitor comparison
+}
+
+model ActionPlanItem {
+  id                     String    @id @default(cuid())
+  clientId               String
+  client                 Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title                  String
+  description            String?
+  priority               String // URGENT, QUICK_WIN, MEDIUM, LONG_TERM
+  owner                  String?
+  dueDate                DateTime?
+  status                 String    @default("TODO")
+  requiresClientApproval Boolean   @default(false)
+  approvedAt             DateTime?
+}
+
+// ===================== TASKS & COMMUNICATION =====================
+model Task {
+  id            String    @id @default(cuid())
+  clientId      String?
+  client        Client?   @relation(fields: [clientId], references: [id])
+  leadId        String?
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  title         String
+  description   String?
+  status        String    @default("TODO") // TODO, IN_PROGRESS, DONE, BLOCKED
+  dueDate       DateTime?
+  autoGenerated Boolean   @default(false)
+  source        String? // e.g. "lead_created", "design_approved", "maintenance_checklist"
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+}
+
+model CommunicationLog {
+  id                  String    @id @default(cuid())
+  clientId            String?
+  client              Client?   @relation(fields: [clientId], references: [id])
+  leadId              String?
+  lead                Lead?     @relation(fields: [leadId], references: [id])
+  channel             String // EMAIL, CALL, SMS, MEETING, PORTAL
+  summary             String
+  promisedFollowUp    String?
+  followUpDueAt       DateTime?
+  followUpCompletedAt DateTime?
+  createdAt           DateTime  @default(now())
+}
+
+// ===================== OFFBOARDING =====================
+model OffboardingRecord {
+  id                     String    @id @default(cuid())
+  clientId               String    @unique
+  client                 Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  initiatedAt            DateTime  @default(now())
+  accessRevoked          Boolean   @default(false)
+  filesHandedOff         Boolean   @default(false)
+  reportsExported        Boolean   @default(false)
+  finalInvoiceId         String?
+  redirectsReviewed      Boolean   @default(false)
+  ownershipTransferNotes String?
+  closeoutSummary        String?
+  portalAccessRevoked    Boolean   @default(false) // [v2] — disable ClientPortalUser login
+  completedAt            DateTime?
+}
+
+// ===================== DEAD-LETTER / WEBHOOK FAILURES =====================
+model WebhookFailure {
+  id        String   @id @default(cuid())
+  payload   Json
+  error     String
+  source    String? // "intake", "stripe"
+  createdAt DateTime @default(now())
+}
+
+// ===================== [v2] UPTIME PINGS (raw — aggregated monthly) =====================
+model UptimePing {
+  id         String   @id @default(cuid())
+  clientId   String
+  success    Boolean
+  responseMs Int?
+  checkedAt  DateTime @default(now())
+}
+
+// ===================== ONBOARDING ENGINE =====================
+
+enum OnboardingSessionStatus {
+  SENT
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+enum OnboardingRuleOutputType {
+  TASK
+  ACCESS_CHECKLIST
+  LAUNCH_CHECKLIST
+  PROPOSAL_LINE
+  INVOICE_DRAFT
+  BRAND_PROFILE_FIELD
+  INTEGRATION_CHECKLIST
+}
+
+model OnboardingTemplate {
+  id                  String              @id @default(cuid())
+  name                String
+  slug                String              @unique
+  description         String?
+  isDefault           Boolean             @default(false)
+  welcomeEmailSubject String
+  welcomeEmailBody    String
+  questionnaire       Json
+  active              Boolean             @default(true)
+  rules               OnboardingRule[]
+  sessions            OnboardingSession[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model OnboardingRule {
+  id           String                   @id @default(cuid())
+  templateId   String
+  template     OnboardingTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  purpose      String
+  condition    Json?
+  outputType   OnboardingRuleOutputType
+  outputConfig Json
+  order        Int                      @default(0)
+  createdAt    DateTime                 @default(now())
+}
+
+model OnboardingSession {
+  id          String                  @id @default(cuid())
+  templateId  String
+  template    OnboardingTemplate      @relation(fields: [templateId], references: [id])
+  leadId      String?
+  lead        Lead?                   @relation(fields: [leadId], references: [id])
+  clientId    String?
+  client      Client?                 @relation(fields: [clientId], references: [id])
+  token       String                  @unique
+  tokenExpiresAt DateTime
+  status      OnboardingSessionStatus @default(SENT)
+  responses   Json?
+  sentAt      DateTime?
+  completedAt DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+}
+
+// ===================== GOOGLE INTEGRATIONS & METRICS =====================
+
+enum IntegrationService {
+  GA4
+  GOOGLE_SEARCH_CONSOLE
+  GBP
+}
+
+enum IntegrationConnectionMethod {
+  OAUTH
+  MANUAL
+}
+
+enum IntegrationStatus {
+  PENDING
+  CONNECTED
+  ERROR
+  EXPIRED
+}
+
+model ClientIntegration {
+  id                 String                      @id @default(cuid())
+  clientId           String
+  client             Client                      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  service            IntegrationService
+  connectionMethod   IntegrationConnectionMethod @default(OAUTH)
+  accessTokenEnc     String?
+  refreshTokenEnc    String?
+  tokenExpiresAt     DateTime?
+  externalAccountId  String?
+  externalPropertyId String?
+  externalSiteUrl    String?
+  externalLocationId String?
+  status             IntegrationStatus           @default(PENDING)
+  lastSyncedAt       DateTime?
+  lastError          String?
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+
+  @@unique([clientId, service])
+}
+
+model MetricSnapshot {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  granularity String   @default("WEEKLY")
+  sessions    Int?
+  users       Int?
+  pageviews   Int?
+  conversions Int?
+  source      String   @default("GA4")
+  capturedAt  DateTime @default(now())
+}
+
+model WeeklyReport {
+  id          String    @id @default(cuid())
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  summary     String?
+  highlights  Json?
+  dataJson    Json?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+}

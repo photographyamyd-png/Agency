@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --surface: #fafafa;
+  --surface-raised: #f4f4f5;
+  --surface-foreground: #09090b;
+  --border: #e4e4e7;
+  --border-bright: #d4d4d8;
+  --accent: #4f46e5;
+  --accent-bright: #6366f1;
+  --accent-foreground: #ffffff;
+  --accent-muted: #eef2ff;
+  --accent-glow: rgba(79, 70, 229, 0.3);
+  --success: #10b981;
+  --success-muted: #ecfdf5;
+  --danger: #f43f5e;
+  --danger-muted: #fff1f2;
+  --warning: #f59e0b;
+  --warning-muted: #fffbeb;
+  --muted: #71717a;
+  --muted-foreground: #a1a1aa;
+  --ring: #4f46e5;
+  --band-a: #ffffff;
+  --band-b: #fafafa;
+  --band-accent: #f5f3ff;
+  --sidebar-width: 260px;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #050508;
+  --foreground: #f4f4f5;
+  --surface: #0f0f14;
+  --surface-raised: #18181f;
+  --surface-foreground: #f4f4f5;
+  --border: #2a2a35;
+  --border-bright: #3f3f50;
+  --accent: #818cf8;
+  --accent-bright: #a5b4fc;
+  --accent-foreground: #050508;
+  --accent-muted: #1e1b4b;
+  --accent-glow: rgba(129, 140, 248, 0.35);
+  --success: #34d399;
+  --success-muted: #064e3b;
+  --danger: #fb7185;
+  --danger-muted: #4c0519;
+  --warning: #fbbf24;
+  --warning-muted: #451a03;
+  --muted: #a1a1aa;
+  --muted-foreground: #71717a;
+  --ring: #818cf8;
+  --band-a: #050508;
+  --band-b: #0c0c12;
+  --band-accent: #12121a;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply min-h-full bg-background text-foreground font-sans tabular-nums antialiased;
+  }
+}
+
+@layer utilities {
+  .text-accent-bright {
+    color: var(--accent-bright);
+  }
+
+  .shadow-accent-glow {
+    box-shadow: 0 0 24px var(--accent-glow);
+  }
+
+  .border-border-bright {
+    border-color: var(--border-bright);
+  }
+
+  .bg-band-a {
+    background-color: var(--band-a);
+  }
+
+  .bg-band-b {
+    background-color: var(--band-b);
+  }
+
+  .bg-band-accent {
+    background-color: var(--band-accent);
+  }
+
+  .bg-surface-raised {
+    background-color: var(--surface-raised);
+  }
+}
