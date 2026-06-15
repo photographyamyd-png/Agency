@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
-import { renderTemplate } from "./templates";
+import { renderTemplate, renderEmailHtml } from "./templates";
 
 function getTransporter() {
   const user = process.env.GMAIL_USER;
@@ -76,10 +76,7 @@ export async function sendTemplatedEmail(input: {
   leadId?: string;
 }) {
   const subject = renderTemplate(input.subject, input.vars);
-  const html = renderTemplate(input.bodyTemplate, input.vars).replace(
-    /\n/g,
-    "<br/>"
-  );
+  const html = renderEmailHtml(renderTemplate(input.bodyTemplate, input.vars));
   return sendEmail({
     to: input.to,
     subject,

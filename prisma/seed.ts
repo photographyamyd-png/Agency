@@ -97,14 +97,28 @@ async function main() {
 
 Thanks for reaching out! To build your custom plan, please complete our short questionnaire:
 
-{{questionnaireUrl}}
+{{questionnaireButton}}
+
+<p style="margin-top:16px;font-size:13px;color:#666;">Or copy this link:<br/><a href="{{questionnaireUrl}}" style="color:#6366f1;word-break:break-all;">{{questionnaireUrl}}</a></p>
 
 It takes about 5 minutes. Once submitted, we'll prepare your profile, project checklists, and estimate.
 
 Talk soon!`,
       questionnaire: DEFAULT_QUESTIONNAIRE,
     },
-    update: {},
+    update: {
+      welcomeEmailBody: `Hi {{contactName}},
+
+Thanks for reaching out! To build your custom plan, please complete our short questionnaire:
+
+{{questionnaireButton}}
+
+<p style="margin-top:16px;font-size:13px;color:#666;">Or copy this link:<br/><a href="{{questionnaireUrl}}" style="color:#6366f1;word-break:break-all;">{{questionnaireUrl}}</a></p>
+
+It takes about 5 minutes. Once submitted, we'll prepare your profile, project checklists, and estimate.
+
+Talk soon!`,
+    },
   });
 
   const existingRules = await prisma.onboardingRule.count({

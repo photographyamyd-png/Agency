@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendTemplatedEmail } from "@/lib/email/gmail";
+import { onboardingEmailVars } from "@/lib/email/templates";
 import { emitSystemEvent } from "@/lib/events/emit";
 import { SYSTEM_EVENT_TYPES } from "@/lib/events/types";
 
@@ -34,7 +35,7 @@ export async function sendOnboardingEmail(input: {
 
   if (!template) throw new Error("No onboarding template configured");
 
-  const token = randomBytes(32).toString("hex");
+  const token = randomBytes(16).toString("hex");
   const session = await prisma.onboardingSession.create({
     data: {
       templateId: template.id,
@@ -54,11 +55,11 @@ export async function sendOnboardingEmail(input: {
     to: lead.email,
     subject: template.welcomeEmailSubject,
     bodyTemplate: template.welcomeEmailBody,
-    vars: {
+    vars: onboardingEmailVars({
       contactName: lead.contactName,
       businessName: lead.businessName,
       questionnaireUrl,
-    },
+    }),
     leadId: lead.id,
   });
 

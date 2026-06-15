@@ -23,7 +23,10 @@ export function TestOnboardingEmail({
         <h3 className="text-sm font-medium">Test onboarding email</h3>
         <p className="mt-1 text-xs text-muted">
           Sends the saved template to your admin inbox with sample data and a real
-          questionnaire link you can open and submit.
+          questionnaire link you can open and submit. Links use{" "}
+          <code className="text-foreground">localhost:3000</code> — keep{" "}
+          <code className="text-foreground">npm run dev</code> running when you
+          test from email.
         </p>
       </div>
 

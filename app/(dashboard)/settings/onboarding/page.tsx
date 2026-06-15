@@ -53,7 +53,8 @@ export default async function OnboardingSettingsPage() {
                 defaultValue={template.welcomeEmailSubject}
               />
               <p className="text-xs text-muted">
-                Variables: {"{{contactName}}"}, {"{{businessName}}"}, {"{{questionnaireUrl}}"}
+                Variables: {"{{contactName}}"}, {"{{businessName}}"},{" "}
+                {"{{questionnaireButton}}"}, {"{{questionnaireUrl}}"}
               </p>
             </div>
             <div className="space-y-1.5">
