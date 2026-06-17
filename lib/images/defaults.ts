@@ -1,16 +1,21 @@
 export const DEFAULT_IMAGES = {
-  hero: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80",
-  heroAlt: "Analytics dashboard on a laptop screen",
-  auth: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1920&q=80",
+  hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80",
+  heroAlt: "Construction crew reviewing plans on a commercial job site",
+  auth: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80",
   services: {
-    WEBSITE: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&q=80",
-    SEO: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80",
-    REPORTING: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    WEBSITE:
+      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1200&q=80",
+    SEO: "https://images.unsplash.com/photo-1569336412239-889163776e01?w=1200&q=80",
+    REPORTING:
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1200&q=80",
   },
   results: [
-    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+    "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1200&q=80",
+    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
   ],
+  trades:
+    "https://images.unsplash.com/photo-1581094797790-f07339a71dca?w=1200&q=80",
+  tradesAlt: "Skilled tradesperson in hard hat working on site",
 } as const;
 
 export type ServicesImages = {
@@ -37,6 +42,14 @@ export function resolveServiceImage(
 export function resolveResultsImages(images?: string[] | null) {
   if (images && images.length > 0) return images;
   return [...DEFAULT_IMAGES.results];
+}
+
+export function resolveTradesImage(url?: string | null) {
+  return url || DEFAULT_IMAGES.trades;
+}
+
+export function resolveTradesAlt(alt?: string | null) {
+  return alt || DEFAULT_IMAGES.tradesAlt;
 }
 
 export function parseServicesImages(json: unknown): ServicesImages | null {

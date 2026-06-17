@@ -3,10 +3,10 @@ import { DEFAULT_IMAGES } from "@/lib/images/defaults";
 
 const DEFAULT_AGENCY = {
   businessName: "Your Web Agency",
-  tagline: "Websites & local SEO that get you found on Google",
-  heroHeadline: "Get more customers from Google",
+  tagline: "Websites & Local SEO for Trade Businesses",
+  heroHeadline: "More Calls From Google — Without the Marketing BS",
   heroSubhead:
-    "Custom websites and local SEO for service businesses — with weekly reports that show your rankings climbing.",
+    "We build websites and run local SEO for HVAC, plumbing, roofing, and contractors. More leads from search — plus weekly reports that show you the numbers.",
   email: "hello@youragency.com",
   phone: "",
   logoUrl: null as string | null,

@@ -15,9 +15,14 @@ export function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <MarketingNav businessName={businessName} logoUrl={logoUrl} />
-      <main className="flex-1">{children}</main>
+    <div className="marketing-page relative flex min-h-screen flex-col">
+      <MarketingNav
+        businessName={businessName}
+        logoUrl={logoUrl}
+        email={email}
+        phone={phone}
+      />
+      <main className="flex-1 pt-[4.25rem]">{children}</main>
       <MarketingFooter
         businessName={businessName}
         logoUrl={logoUrl}

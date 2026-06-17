@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-plus-jakarta)", "system-ui", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
@@ -50,6 +51,15 @@ const config: Config = {
           a: "var(--band-a)",
           b: "var(--band-b)",
           accent: "var(--band-accent)",
+        },
+        mkt: {
+          ink: "var(--mkt-ink)",
+          paper: "var(--mkt-paper)",
+          stone: "var(--mkt-stone)",
+          accent: "var(--mkt-accent)",
+          "accent-bright": "var(--mkt-accent-bright)",
+          muted: "var(--mkt-muted)",
+          border: "var(--mkt-border)",
         },
       },
       borderRadius: {

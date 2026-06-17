@@ -100,4 +100,246 @@
   .bg-surface-raised {
     background-color: var(--surface-raised);
   }
+
+  .auth-brand-panel {
+    background-color: #030306;
+  }
+
+  .auth-brand-dots {
+    background-image: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.12) 0.6px,
+      transparent 0.6px
+    );
+    background-size: 14px 14px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 70% at 50% 50%,
+      black 20%,
+      transparent 100%
+    );
+  }
+
+  .auth-brand-glow {
+    opacity: 0.7;
+    animation: auth-glow-drift 12s ease-in-out infinite alternate;
+  }
+
+  .auth-brand-glow-teal {
+    background: radial-gradient(
+      ellipse 55% 45% at 8% 12%,
+      rgba(45, 212, 191, 0.22) 0%,
+      transparent 70%
+    );
+  }
+
+  .auth-brand-glow-amber {
+    background: radial-gradient(
+      ellipse 50% 40% at 92% 88%,
+      rgba(251, 146, 60, 0.18) 0%,
+      transparent 70%
+    );
+    animation-delay: -6s;
+  }
+}
+
+@keyframes auth-glow-drift {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+/* ─── Marketing landing page (BuildStitch / OSTECH system) ─── */
+.marketing-page {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+
+  --mkt-ink: #0c0e12;
+  --mkt-paper: #ffffff;
+  --mkt-stone: #eceae4;
+  --mkt-accent: #e85d04;
+  --mkt-accent-bright: #f5a623;
+  --mkt-text: #0c0e12;
+  --mkt-muted: #5c5f66;
+  --mkt-border: #e2e2de;
+  --mkt-on-dark: #fafaf9;
+  --mkt-muted-on-dark: rgba(250, 250, 249, 0.65);
+
+  font-family: var(--font-inter), system-ui, sans-serif;
+  background-color: var(--mkt-paper);
+  color: var(--mkt-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.marketing-page .font-display {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+}
+
+.mkt-band-paper {
+  background-color: var(--mkt-paper);
+  color: var(--mkt-text);
+}
+
+.mkt-band-stone {
+  background-color: var(--mkt-stone);
+  color: var(--mkt-text);
+}
+
+.mkt-band-ink {
+  background-color: var(--mkt-ink);
+  color: var(--mkt-on-dark);
+  --mkt-text: var(--mkt-on-dark);
+  --mkt-muted: var(--mkt-muted-on-dark);
+  --mkt-border: rgba(255, 255, 255, 0.12);
+}
+
+.mkt-container {
+  margin-inline: auto;
+  max-width: 72rem;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .mkt-container {
+    padding-inline: 2rem;
+  }
+}
+
+.mkt-content {
+  max-width: 72rem;
+}
+
+.mkt-eyebrow {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mkt-accent);
+}
+
+.mkt-eyebrow-light {
+  color: var(--mkt-accent-bright);
+}
+
+.mkt-headline {
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: clamp(1.875rem, 3.5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--mkt-text);
+}
+
+.mkt-headline-hero {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  line-height: 1.05;
+}
+
+.mkt-lead {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--mkt-muted);
+  max-width: 36rem;
+}
+
+.mkt-card {
+  border: 1px solid var(--mkt-border);
+  border-radius: 0.25rem;
+  background: var(--mkt-paper);
+}
+
+.mkt-card-stone {
+  border: 1px solid var(--mkt-border);
+  border-radius: 0.25rem;
+  background: var(--mkt-stone);
+}
+
+.mkt-card-ink {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.25rem;
+  background: var(--mkt-ink);
+  color: var(--mkt-on-dark);
+}
+
+.mkt-icon-box {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  background: var(--mkt-ink);
+  color: var(--mkt-accent);
+}
+
+.mkt-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 0.25rem;
+  background: var(--mkt-accent);
+  color: #fff;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+}
+
+.mkt-btn-accent:hover {
+  background: #d45304;
+}
+
+.mkt-btn-accent-icon {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mkt-btn-ghost-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--mkt-on-dark);
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease;
+}
+
+.mkt-btn-ghost-dark:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mkt-stat-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  border-left: 3px solid var(--mkt-accent);
+  padding-left: 1rem;
+}
+
+.mkt-divider-accent {
+  height: 3px;
+  background: var(--mkt-accent);
 }

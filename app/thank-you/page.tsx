@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { Check } from "lucide-react";
 import { MarketingLayout } from "@/components/marketing/marketing-layout";
 import { getAgencyProfile } from "@/lib/agency/profile";
-import { Button } from "@/components/ui/button";
+import { SectionShell } from "@/components/marketing/primitives/section-shell";
+import { AccentButton } from "@/components/marketing/primitives/accent-button";
 
 export default async function ThankYouPage({
   searchParams,
@@ -19,20 +20,24 @@ export default async function ThankYouPage({
       email={agency.email}
       phone={agency.phone}
     >
-      <div className="mx-auto max-w-lg px-4 py-24 text-center sm:px-6">
-        <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-accent-muted text-2xl">
-          ✓
+      <SectionShell band="stone" className="flex min-h-[60vh] items-center">
+        <div className="mkt-container flex justify-center">
+          <div className="mkt-float-card max-w-lg p-10 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--mkt-accent)] text-white">
+              <Check className="h-8 w-8" strokeWidth={2.5} />
+            </div>
+            <h1 className="mkt-headline">Thank you!</h1>
+            <p className="mkt-lead mx-auto mt-4">
+              {onboardingSent
+                ? "We got your request and sent a welcome email with a short questionnaire. Check your inbox — we'll review it and call you back within one business day."
+                : "We got your request. Expect to hear from us within one business day with next steps."}
+            </p>
+            <div className="mt-10 flex justify-center">
+              <AccentButton href="/">Back to home</AccentButton>
+            </div>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Thank you!</h1>
-        <p className="mt-4 text-muted leading-relaxed">
-          {onboardingSent
-            ? "We've received your request and sent a welcome email with a short questionnaire. Check your inbox — we'll review your answers and follow up within one business day."
-            : "We've received your request and will follow up within one business day."}
-        </p>
-        <Button className="mt-8" asChild>
-          <Link href="/">Back to home</Link>
-        </Button>
-      </div>
+      </SectionShell>
     </MarketingLayout>
   );
 }
