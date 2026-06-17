@@ -1,8 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
   clientPasswordLogin,
   requestMagicLink,
@@ -20,7 +18,7 @@ interface ClientLoginFormProps {
 export function ClientLoginForm({
   businessName,
   logoUrl,
-  heroImageUrl,
+  heroImageUrl: _heroImageUrl,
 }: ClientLoginFormProps) {
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [passwordState, passwordAction, passwordPending] = useActionState(
@@ -33,29 +31,12 @@ export function ClientLoginForm({
   );
 
   return (
-    <AuthLayout heroImageUrl={heroImageUrl}>
-      <div className="text-center">
-        <Link href="/" className="mx-auto mb-4 flex h-10 w-10 items-center justify-center">
-          {logoUrl ? (
-            <Image
-              src={logoUrl}
-              alt={businessName}
-              width={40}
-              height={40}
-              className="rounded-lg object-cover"
-            />
-          ) : (
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-sm font-bold text-accent-foreground shadow-accent-glow">
-              {businessName.charAt(0).toUpperCase()}
-            </span>
-          )}
-        </Link>
-        <h1 className="text-xl font-semibold tracking-tight">Client portal</h1>
-        <p className="mt-1 text-sm text-muted">
-          View reports, rankings, and project progress
-        </p>
-      </div>
-
+    <AuthLayout
+      businessName={businessName}
+      logoUrl={logoUrl}
+      tagline="View reports, rankings, and project progress."
+      title="Client portal"
+    >
       <div className="flex rounded-lg border border-border-bright p-1">
         <button
           type="button"
@@ -109,11 +90,6 @@ export function ClientLoginForm({
         </form>
       )}
 
-      <p className="text-center text-xs text-muted">
-        <Link href="/" className="text-accent-bright hover:underline">
-          ← Back to website
-        </Link>
-      </p>
     </AuthLayout>
   );
 }

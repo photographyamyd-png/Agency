@@ -6,12 +6,14 @@ export function MarketingLayout({
   logoUrl,
   email,
   phone,
+  chickenImage,
   children,
 }: {
   businessName: string;
   logoUrl?: string | null;
   email?: string | null;
   phone?: string | null;
+  chickenImage?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -28,6 +30,7 @@ export function MarketingLayout({
         logoUrl={logoUrl}
         email={email}
         phone={phone}
+        chickenImage={chickenImage}
       />
     </div>
   );

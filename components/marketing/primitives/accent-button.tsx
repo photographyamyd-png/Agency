@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface AccentButtonProps {
   href: string;
   children: React.ReactNode;
-  variant?: "accent" | "ghost-dark";
+  variant?: "accent" | "ghost";
   className?: string;
   onClick?: () => void;
 }
@@ -21,7 +21,7 @@ export function AccentButton({
       href={href}
       onClick={onClick}
       className={cn(
-        variant === "accent" ? "mkt-btn-accent h-12 px-6" : "mkt-btn-ghost-dark h-12 px-6",
+        variant === "accent" ? "mkt-btn-accent h-12 px-6" : "mkt-btn-ghost h-12 px-6",
         className
       )}
     >

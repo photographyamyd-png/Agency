@@ -56,6 +56,56 @@ const DEFAULT_QUESTIONNAIRE = {
       label: "What does success look like in 6 months?",
       required: true,
     },
+    {
+      id: "serviceLines",
+      type: "textarea",
+      label: "Primary service lines and revenue split per service",
+    },
+    {
+      id: "targetCities",
+      type: "text",
+      label: "Target cities, service radius, and priority geography",
+    },
+    {
+      id: "avgJobValue",
+      type: "text",
+      label: "Average job/ticket value",
+    },
+    {
+      id: "closeRate",
+      type: "text",
+      label: "Estimated close rate",
+    },
+    {
+      id: "seasonality",
+      type: "textarea",
+      label: "Seasonal demand peaks and slow periods",
+    },
+    {
+      id: "serviceCapacity",
+      type: "text",
+      label: "Service capacity (jobs per week)",
+    },
+    {
+      id: "leadSources",
+      type: "textarea",
+      label: "Current lead sources and marketing history",
+    },
+    {
+      id: "reputation",
+      type: "textarea",
+      label: "Existing reviews, ratings, and reputation situation",
+    },
+    {
+      id: "knownCompetitors",
+      type: "textarea",
+      label: "Known competitors you are aware of",
+    },
+    {
+      id: "brandVoice",
+      type: "textarea",
+      label: "Brand voice, preferred tone, and brand guidelines",
+    },
   ],
 };
 
@@ -64,23 +114,24 @@ async function main() {
   if (!existingAgency) {
     await prisma.agencyProfile.create({
       data: {
-        businessName: "Your Web Agency",
-        tagline: "Websites & local SEO that get you found on Google",
-        heroHeadline: "Get more customers from Google",
+        businessName: "Amy · Web for Trades",
+        tagline: "Websites & Google Maps for the trades",
+        heroHeadline: "Websites and local SEO for plumbers, roofers, HVAC & contractors",
         heroSubhead:
-          "Custom websites and local SEO for service businesses — with weekly reports that show your rankings climbing.",
+          "I'm Amy. I build solid sites and run local SEO so when someone searches \"emergency plumber near me\" or \"roofer in [your town]\" — your business shows up and the phone rings.",
         email: "hello@youragency.com",
-        autoOnboardWebsiteLeads: true,
-        heroImageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80",
-        heroImageAlt: "Analytics dashboard on a laptop screen",
+        methodologyName: "Local SEO Blueprint",
+        methodologyVersion: "3.0",
+        heroImageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&q=85",
+        heroImageAlt: "Plumber on a service call — local trade business",
         servicesImages: {
-          WEBSITE: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&q=80",
-          SEO: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80",
-          REPORTING: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+          WEBSITE: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=85",
+          SEO: "https://images.unsplash.com/photo-1621905252507-b35492ba26c8?w=1200&q=85",
+          REPORTING: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85",
         },
         resultsImages: [
-          "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+          "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1200&q=85",
+          "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=85",
         ],
       },
     });
@@ -190,6 +241,30 @@ Talk soon!`,
   if (pricingCount === 0) {
     await prisma.pricingMatrixItem.createMany({
       data: [
+        {
+          name: "Starter Retainer",
+          category: "SEO Retainer",
+          basePrice: 1750,
+          unit: "monthly",
+        },
+        {
+          name: "Growth Retainer",
+          category: "SEO Retainer",
+          basePrice: 3000,
+          unit: "monthly",
+        },
+        {
+          name: "Domination Retainer",
+          category: "SEO Retainer",
+          basePrice: 5000,
+          unit: "monthly",
+        },
+        {
+          name: "One-Time Website Build",
+          category: "Website",
+          basePrice: 7500,
+          unit: "flat",
+        },
         {
           name: "Website build — standard",
           category: "Website",

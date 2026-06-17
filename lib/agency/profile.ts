@@ -2,11 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { DEFAULT_IMAGES } from "@/lib/images/defaults";
 
 const DEFAULT_AGENCY = {
-  businessName: "Your Web Agency",
-  tagline: "Websites & Local SEO for Trade Businesses",
-  heroHeadline: "More Calls From Google — Without the Marketing BS",
+  businessName: "Amy · Web for Trades",
+  tagline: "Websites for people who actually work for a living",
+  heroHeadline:
+    "Stop selling premium work with a website that looks like a 1992 game of Frogger.",
   heroSubhead:
-    "We build websites and run local SEO for HVAC, plumbing, roofing, and contractors. More leads from search — plus weekly reports that show you the numbers.",
+    "Aunt Martha—or whoever built your site—meant well, but your digital storefront is costing you the jobs that pay the bills. You're a pro; stop looking like an amateur.",
   email: "hello@youragency.com",
   phone: "",
   logoUrl: null as string | null,
