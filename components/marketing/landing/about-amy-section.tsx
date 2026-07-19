@@ -54,7 +54,7 @@ export function AboutAmySection({
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border-2 border-[var(--mkt-accent-bright)]">
                 <Image
                   src={chickenImage}
-                  alt="Amy's chicken"
+                  alt={MARKETING_COPY.chickenLine}
                   fill
                   className="object-cover"
                   sizes="40px"

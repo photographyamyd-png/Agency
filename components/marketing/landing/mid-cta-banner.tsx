@@ -1,8 +1,9 @@
 import { AccentButton } from "@/components/marketing/primitives/accent-button";
 import { ProductVideoMock } from "@/components/marketing/primitives/product-video-mock";
 import { MARKETING_COPY } from "@/lib/agency/marketing-copy";
+import { DEFAULT_IMAGES } from "@/lib/images/defaults";
 
-/** Bright white divider + Semrush-style product demo player between dark bands */
+/** Bright white divider + real Stuart Action footage between dark bands */
 export function MidCtaBanner() {
   return (
     <section
@@ -14,7 +15,6 @@ export function MidCtaBanner() {
         aria-hidden
       />
 
-      {/* Soft atmosphere — no dark overlay */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -47,7 +47,10 @@ export function MidCtaBanner() {
           </div>
 
           <div className="lg:col-span-7">
-            <ProductVideoMock />
+            <ProductVideoMock
+              src={DEFAULT_IMAGES.midCtaVideo}
+              poster={DEFAULT_IMAGES.midCtaPoster}
+            />
           </div>
         </div>
       </div>
