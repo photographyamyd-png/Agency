@@ -16,6 +16,8 @@ export async function updateAgencyProfile(formData: FormData) {
   const email = String(formData.get("email") ?? "") || null;
   const phone = String(formData.get("phone") ?? "") || null;
   const autoOnboard = formData.get("autoOnboardWebsiteLeads") === "on";
+  const standardAgreementTerms =
+    String(formData.get("standardAgreementTerms") ?? "") || null;
 
   const logoUrl = String(formData.get("logoUrl") ?? "") || null;
   const heroImageUrl = String(formData.get("heroImageUrl") ?? "") || null;
@@ -57,6 +59,7 @@ export async function updateAgencyProfile(formData: FormData) {
       ? (resultsJson as Prisma.InputJsonValue)
       : Prisma.DbNull,
     autoOnboardWebsiteLeads: autoOnboard,
+    standardAgreementTerms,
   };
 
   if (id) {

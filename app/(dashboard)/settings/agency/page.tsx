@@ -106,6 +106,18 @@ export default async function AgencySettingsPage() {
             />
             Auto-send onboarding email when a lead submits the homepage form
           </label>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Standard agreement terms</label>
+            <Textarea
+              name="standardAgreementTerms"
+              rows={10}
+              defaultValue={profile?.standardAgreementTerms ?? ""}
+              placeholder="Terms shown to clients before they e-sign during onboarding"
+            />
+            <p className="text-xs text-muted">
+              Shown on the agreement step of client onboarding before signature.
+            </p>
+          </div>
         </fieldset>
 
         <Button type="submit" variant="glow">

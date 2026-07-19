@@ -18,6 +18,7 @@ const DEFAULT_AGENCY = {
   autoOnboardWebsiteLeads: true,
   defaultRevisionRounds: 2,
   defaultPaymentSchedule: null as null,
+  standardAgreementTerms: null as string | null,
   updatedAt: new Date(),
 };
 

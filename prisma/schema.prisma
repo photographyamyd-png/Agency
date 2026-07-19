@@ -108,6 +108,9 @@ model AgencyProfile {
   autoOnboardWebsiteLeads  Boolean  @default(true)
   defaultRevisionRounds    Int      @default(2)
   defaultPaymentSchedule   Json? // e.g. [{ "label": "Deposit", "percent": 50 }, ...]
+  methodologyName          String?
+  methodologyVersion       String?  @default("3.0")
+  standardAgreementTerms   String? // plain-text T&Cs shown before client e-sign
   updatedAt                DateTime @updatedAt
 }
 
@@ -211,6 +214,18 @@ model DiscoveryCall {
   hasDomainAccess    Boolean?
   hasAnalyticsAccess Boolean?
   hasAdsAccount      Boolean?
+  hasCmsAccess       Boolean?
+  hasHostingAccess   Boolean?
+  hasGscAccess       Boolean?
+  revenueSplit       String?
+  targetCities       String?
+  avgJobValue        String?
+  closeRate          String?
+  serviceCapacity    String?
+  leadSources        String?
+  reputationNotes    String?
+  knownCompetitors   String?
+  brandVoice         String?
   fitDecision        String? // PROCEED, PAUSE, DECLINE
 }
 
@@ -225,16 +240,20 @@ enum ClientStatus {
 }
 
 model Client {
-  id                String       @id @default(cuid())
-  leadId            String?      @unique
-  lead              Lead?        @relation(fields: [leadId], references: [id])
-  legalBusinessName String
-  dba               String?
-  businessStructure String?
-  billingName       String?
-  billingEmail      String?
-  status            ClientStatus @default(ONBOARDING)
-  stripeCustomerId  String? // created on Client creation
+  id                     String       @id @default(cuid())
+  leadId                 String?      @unique
+  lead                   Lead?        @relation(fields: [leadId], references: [id])
+  legalBusinessName      String
+  dba                    String?
+  businessStructure      String?
+  billingName            String?
+  billingEmail           String?
+  primaryContactName     String?
+  primaryContactPhone    String?
+  technicalContactName   String?
+  technicalContactEmail  String?
+  status                 ClientStatus @default(ONBOARDING)
+  stripeCustomerId       String? // created on Client creation
 
   brandProfile    BrandProfile?
   competitors     Competitor[]
@@ -269,6 +288,8 @@ model Client {
   metricSnapshots     MetricSnapshot[]
   weeklyReports       WeeklyReport[]
   onboardingSessions  OnboardingSession[]
+  geoGridSnapshots    GeoGridSnapshot[]
+  localLinks          LocalLinkRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -314,19 +335,59 @@ model BrandProfile {
   // primaryKeyword references are flagged for review.
   primaryKeyword    String?
   lastKeywordSyncAt DateTime?
+  goldenNapJson       Json? // locked NAP + format rules + short description
+  reviewTargetsJson Json? // velocity goals, review link, QR URL
+  businessIntelJson Json? // §1.1 business intelligence intake fields
+  geoReadinessJson  Json? // §11 GEO checklist persistence per client
+  siteSeoChecklistJson Json? // §6.4 E-E-A-T + §6.5 CRO site-wide checklists
 }
 
 model Competitor {
-  id              String    @id @default(cuid())
-  clientId        String
-  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  url             String
-  title           String?
-  metaDescription String?
-  pageCount       Int?
-  pagespeedScore  Int?
-  snapshotAt      DateTime?
-  createdAt       DateTime  @default(now())
+  id                    String    @id @default(cuid())
+  clientId              String
+  client                Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name                  String?
+  url                   String
+  title                 String?
+  metaDescription       String?
+  pageCount             Int?
+  pagespeedScore        Int?
+  gbpPrimaryCategory    String?
+  gbpSecondaryCategories Json?   @default("[]")
+  reviewCount           Int?
+  avgRating             Float?
+  photoCount            Int?
+  geoGridNotes          String?
+  qaNotes               String?
+  postsNotes            String?
+  servicesNotes         String?
+  reviewVelocity        String? // e.g. "5/month steady"
+  semanticPhrases       Json?   @default("[]") // §2.4 review mining phrases
+  snapshotAt            DateTime?
+  createdAt             DateTime  @default(now())
+}
+
+model GeoGridSnapshot {
+  id            String   @id @default(cuid())
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  seedPhrase    String
+  notes         String?
+  screenshotUrl String?
+  capturedAt    DateTime @default(now())
+}
+
+model LocalLinkRecord {
+  id           String    @id @default(cuid())
+  clientId     String
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sourceType   String // CHAMBER, SPONSORSHIP, SUPPLIER, PARTNER, MEDIA, OTHER
+  sourceName   String
+  url          String?
+  status       String    @default("PROSPECT") // PROSPECT, OUTREACH, ACQUIRED, REJECTED
+  outreachNotes String?
+  acquiredAt   DateTime?
+  createdAt    DateTime  @default(now())
 }
 
 // ===================== PROPOSALS / CONTRACTS =====================
@@ -338,14 +399,14 @@ enum ProposalStatus {
 }
 
 model Proposal {
-  id                 String             @id @default(cuid())
+  id                 String              @id @default(cuid())
   clientId           String
-  client             Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  version            Int                @default(1)
-  status             ProposalStatus     @default(DRAFT)
+  client             Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  version            Int                 @default(1)
+  status             ProposalStatus      @default(DRAFT)
   scopeIncluded      String?
   scopeExcluded      String?
-  revisionRounds     Int                @default(2)
+  revisionRounds     Int                 @default(2)
   timelineEstimate   String?
   paymentSchedule    Json? // [{ label, percent or amount, trigger }]
   retainerTerms      Json? // { monthlyFee, cadence, noticePeriodDays, autoRenew }
@@ -353,12 +414,13 @@ model Proposal {
   signatureDataUrl   String?
   signedAt           DateTime?
   signedIp           String?
-  signToken          String?            @unique
+  signToken          String?             @unique
   signTokenExpiresAt DateTime?
   pdfUrl             String?
   invoices           Invoice[]
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  onboardingSessions OnboardingSession[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 model ProposalLineItem {
@@ -440,11 +502,22 @@ model VaultAccessLog {
 enum PageType {
   HOMEPAGE
   SERVICE
+  SERVICE_AREA
   LOCATION
   ABOUT
   CONTACT
   BLOG
+  FAQ
+  CASE_STUDY
+  TESTIMONIALS
+  EMERGENCY
   OTHER
+}
+
+enum KeywordIntent {
+  TRANSACTIONAL
+  COMMERCIAL
+  INFORMATIONAL
 }
 
 enum PageStatus {
@@ -787,6 +860,8 @@ model Keyword {
   clientId      String
   client        Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
   term          String
+  intent        KeywordIntent?
+  secondaryTerms Json?                @default("[]")
   searchVolume  Int?
   difficulty    Int?
   pages         PageNode[]
@@ -857,12 +932,16 @@ model ContentCalendarItem {
 }
 
 model GBPActivityLog {
-  id       String   @id @default(cuid())
-  clientId String
-  client   Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  type     String // POST, QA_RESPONSE, REVIEW_RESPONSE
-  content  String?
-  postedAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type           String // POST, QA_RESPONSE, REVIEW_RESPONSE, SYNC
+  content        String?
+  ctaType        String? // Book, Call Now, Get Quote
+  destinationUrl String?
+  utmParams      String?
+  photoAttached  Boolean  @default(false)
+  postedAt       DateTime @default(now())
 }
 
 model MonthlyReport {
@@ -975,6 +1054,14 @@ enum OnboardingSessionStatus {
   EXPIRED
 }
 
+enum OnboardingStage {
+  PROFILE
+  PACKAGES
+  AGREEMENT
+  ACCESS
+  COMPLETED
+}
+
 enum OnboardingRuleOutputType {
   TASK
   ACCESS_CHECKLIST
@@ -1014,21 +1101,26 @@ model OnboardingRule {
 }
 
 model OnboardingSession {
-  id          String                  @id @default(cuid())
-  templateId  String
-  template    OnboardingTemplate      @relation(fields: [templateId], references: [id])
-  leadId      String?
-  lead        Lead?                   @relation(fields: [leadId], references: [id])
-  clientId    String?
-  client      Client?                 @relation(fields: [clientId], references: [id])
-  token       String                  @unique
-  tokenExpiresAt DateTime
-  status      OnboardingSessionStatus @default(SENT)
-  responses   Json?
-  sentAt      DateTime?
-  completedAt DateTime?
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
+  id               String                  @id @default(cuid())
+  templateId       String
+  template         OnboardingTemplate      @relation(fields: [templateId], references: [id])
+  leadId           String?
+  lead             Lead?                   @relation(fields: [leadId], references: [id])
+  clientId         String?
+  client           Client?                 @relation(fields: [clientId], references: [id])
+  proposalId       String?
+  proposal         Proposal?               @relation(fields: [proposalId], references: [id])
+  token            String                  @unique
+  tokenExpiresAt   DateTime
+  status           OnboardingSessionStatus @default(SENT)
+  currentStage     OnboardingStage         @default(PROFILE)
+  completedStages  Json                    @default("[]") // string[] of OnboardingStage values
+  responses        Json?
+  selectedPackages Json? // string[] of package ids chosen in stage 2
+  sentAt           DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
 }
 
 // ===================== GOOGLE INTEGRATIONS & METRICS =====================
