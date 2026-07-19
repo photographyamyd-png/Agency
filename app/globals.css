@@ -223,6 +223,10 @@
   line-height: 1.2;
 }
 
+#hero .mkt-headline {
+  color: #fff;
+}
+
 .mkt-lead {
   font-size: 1.125rem;
   line-height: 1.75;

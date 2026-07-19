@@ -1,21 +1,21 @@
 export const DEFAULT_IMAGES = {
-  hero: "/images/marketing/stuart/about-portrait.jpg",
-  heroAlt: "Heavy equipment on a real jobsite — the work Amy builds sites for",
+  hero: "/images/marketing/stuart/hero-jobsite.jpg",
+  heroAlt: "Bobcat track loader on a real jobsite — the work Amy builds sites for",
   auth: "/images/marketing/stuart/about-portrait.jpg",
   services: {
-    WEBSITE: "/images/marketing/stuart/about-portrait.jpg",
+    WEBSITE: "/images/marketing/stuart/hero-jobsite.jpg",
     SEO: "/images/marketing/stuart/footer-note.jpg",
     REPORTING: "/images/marketing/stuart/about-extra.jpg",
   },
   results: [
-    "/images/marketing/stuart/about-portrait.jpg",
+    "/images/marketing/stuart/hero-jobsite.jpg",
     "/images/marketing/stuart/about-extra.jpg",
   ],
   trades: "/images/marketing/stuart/about-portrait.jpg",
   tradesAlt: "Jobsite equipment — the kind of business I build websites for",
   chickens: "/images/marketing/stuart/footer-note.jpg",
   chickensAlt: "Hands on the controls — real work, real clients",
-  midCtaVideo: "/videos/marketing/mid-cta.mp4",
+  midCtaVideo: "/videos/marketing/mid-cta.mp4?v=2",
   midCtaPoster: "/images/marketing/stuart/mid-cta-poster.jpg",
 } as const;
 

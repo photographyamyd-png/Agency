@@ -14,6 +14,8 @@ import { PricingSection } from "@/components/marketing/landing/pricing-section";
 import { ContactSection } from "@/components/marketing/landing/contact-section";
 import {
   resolveChickenImage,
+  resolveHeroAlt,
+  resolveHeroImage,
   resolveTradesImage,
   resolveTradesAlt,
 } from "@/lib/images/defaults";
@@ -26,6 +28,8 @@ export default async function HomePage() {
   const chickenImage = resolveChickenImage();
   const portraitImage = resolveTradesImage();
   const portraitAlt = resolveTradesAlt();
+  const heroImage = resolveHeroImage();
+  const heroAlt = resolveHeroAlt();
 
   return (
     <MarketingLayout
@@ -40,6 +44,8 @@ export default async function HomePage() {
         headline={copy.headline}
         subhead={copy.subhead}
         phone={agency.phone}
+        imageSrc={heroImage}
+        imageAlt={heroAlt}
       />
 
       <PartnerTrustBar />

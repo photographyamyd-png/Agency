@@ -13,7 +13,7 @@ interface ProductVideoMockProps {
 /** Real muted looping demo video with light player chrome */
 export function ProductVideoMock({
   className,
-  src = "/videos/marketing/mid-cta.mp4",
+  src = "/videos/marketing/mid-cta.mp4?v=2",
   poster = "/images/marketing/stuart/mid-cta-poster.jpg",
 }: ProductVideoMockProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
