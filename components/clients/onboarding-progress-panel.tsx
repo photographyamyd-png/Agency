@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ClientWorkspaceData } from "@/lib/data/client-workspace";
 import {
   CLIENT_VISIBLE_STAGES,
   STAGE_LABELS,
@@ -8,15 +7,51 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
+import type { OnboardingStage, OnboardingSessionStatus, ProposalStatus } from "@prisma/client";
 
-type Session = NonNullable<ClientWorkspaceData["onboardingSessions"]>[number];
+/** Narrow props so this panel builds without the full client-workspace module. */
+export type OnboardingProgressClient = {
+  id: string;
+  status: string;
+  primaryContactName: string | null;
+  primaryContactPhone: string | null;
+  billingName: string | null;
+  billingEmail: string | null;
+  technicalContactName: string | null;
+  technicalContactEmail: string | null;
+  brandProfile: {
+    existingSiteUrl: string | null;
+    domain: string | null;
+    currentHost: string | null;
+    currentRegistrar: string | null;
+    socialLinks: unknown;
+  } | null;
+  accessItems: {
+    id: string;
+    label: string;
+    status: string;
+  }[];
+  vaultEntries: { id: string }[];
+  onboardingSessions: {
+    status: OnboardingSessionStatus;
+    currentStage: OnboardingStage;
+    completedStages: unknown;
+    completedAt: Date | null;
+  }[];
+  proposals: {
+    id: string;
+    status: ProposalStatus;
+    signedAt: Date | null;
+    lineItems: { total: unknown }[];
+  }[];
+};
 
 export function OnboardingProgressPanel({
   client,
 }: {
-  client: ClientWorkspaceData;
+  client: OnboardingProgressClient;
 }) {
-  const session = client.onboardingSessions[0] as Session | undefined;
+  const session = client.onboardingSessions[0];
   const signedProposal = client.proposals.find((p) => p.status === "SIGNED");
   const latestProposal = signedProposal ?? client.proposals[0];
   const missingAccess = client.accessItems.filter(
