@@ -6,6 +6,7 @@ interface MarketingAtmosphereProps {
   intensity?: "hero" | "section" | "subtle";
 }
 
+/** Subtle warm glow — no rainbow mesh */
 export function MarketingAtmosphere({
   className,
   children,
@@ -13,18 +14,19 @@ export function MarketingAtmosphere({
 }: MarketingAtmosphereProps) {
   return (
     <div className={cn("relative overflow-hidden", className)}>
-      <div className="mkt-dots absolute inset-0" aria-hidden />
       <div
         className={cn(
-          "mkt-glow mkt-glow-indigo absolute inset-0",
+          "pointer-events-none absolute inset-0",
           intensity === "hero" && "opacity-100",
-          intensity === "section" && "opacity-80",
-          intensity === "subtle" && "opacity-50"
+          intensity === "section" && "opacity-70",
+          intensity === "subtle" && "opacity-40"
         )}
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 40% at 80% 20%, rgba(232, 93, 4, 0.12) 0%, transparent 70%)",
+        }}
         aria-hidden
       />
-      <div className="mkt-glow mkt-glow-teal absolute inset-0" aria-hidden />
-      <div className="mkt-glow mkt-glow-violet absolute inset-0" aria-hidden />
       {children && <div className="relative z-10">{children}</div>}
     </div>
   );

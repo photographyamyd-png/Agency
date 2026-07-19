@@ -1,38 +1,48 @@
 import { cn } from "@/lib/utils";
-import { MarketingAtmosphere } from "@/components/marketing/primitives/marketing-atmosphere";
 
-export type SectionTone = "light" | "dark";
+export type SectionBand = "paper" | "stone" | "ink";
 
 interface SectionShellProps {
   id?: string;
-  tone?: SectionTone;
+  band?: SectionBand;
+  /** @deprecated use band */
+  tone?: "light" | "dark";
   className?: string;
   children: React.ReactNode;
-  overlap?: boolean;
-  zig?: "left" | "right" | "none";
+  diagonalTop?: boolean;
+  diagonalBottom?: boolean;
+}
+
+function resolveBand(band?: SectionBand, tone?: "light" | "dark"): SectionBand {
+  if (band) return band;
+  if (tone === "dark") return "stone";
+  return "paper";
 }
 
 export function SectionShell({
   id,
-  tone = "dark",
+  band,
+  tone,
   className,
   children,
-  overlap = false,
+  diagonalTop = false,
+  diagonalBottom = false,
 }: SectionShellProps) {
-  const isDark = tone === "dark";
+  const resolved = resolveBand(band, tone);
 
   return (
     <section
       id={id}
       className={cn(
-        "relative overflow-hidden py-24 lg:py-32",
-        isDark ? "mkt-band-dark text-foreground" : "mkt-band-light",
-        overlap && "mkt-section-overlap",
+        "relative overflow-hidden py-28 lg:py-40",
+        resolved === "paper" && "mkt-band-paper",
+        resolved === "stone" && "mkt-band-stone",
+        resolved === "ink" && "mkt-band-ink",
+        diagonalTop && "mkt-cut-diagonal-top",
+        diagonalBottom && "mkt-cut-diagonal-bottom",
         className
       )}
     >
-      {isDark && <MarketingAtmosphere intensity="section" className="absolute inset-0" />}
-      {!isDark && <div className="mkt-light-mesh absolute inset-0" aria-hidden />}
       <div className="relative z-10">{children}</div>
     </section>
   );
@@ -45,21 +55,11 @@ interface ZigZagProps {
   className?: string;
 }
 
-/** Two-column zig-zag: flips image left/right per section */
 export function ZigZagRow({ children, image, reverse = false, className }: ZigZagProps) {
   return (
-    <div
-      className={cn(
-        "grid items-center gap-12 lg:grid-cols-12 lg:gap-16",
-        className
-      )}
-    >
-      <div className={cn("lg:col-span-6", reverse ? "lg:order-2" : "lg:order-1")}>
-        {image}
-      </div>
-      <div className={cn("lg:col-span-6", reverse ? "lg:order-1" : "lg:order-2")}>
-        {children}
-      </div>
+    <div className={cn("grid items-center gap-12 lg:grid-cols-12 lg:gap-20", className)}>
+      <div className={cn("lg:col-span-6", reverse ? "lg:order-2" : "lg:order-1")}>{image}</div>
+      <div className={cn("lg:col-span-6", reverse ? "lg:order-1" : "lg:order-2")}>{children}</div>
     </div>
   );
 }

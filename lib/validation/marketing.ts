@@ -6,8 +6,28 @@ export const websiteLeadSchema = z.object({
   email: z.string().email("Valid email required"),
   phone: z.string().optional(),
   website: z.string().optional(),
-  interestedIn: z.array(z.string()).min(1, "Select at least one service"),
+  budgetRange: z.string().optional(),
+  interestedIn: z.array(z.string()).default([]),
   problemSummary: z.string().optional(),
+  formVariant: z.enum(["full", "qualify"]).optional(),
+}).superRefine((data, ctx) => {
+  if (data.formVariant === "qualify") {
+    if (!data.budgetRange?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Monthly revenue helps me know if we're a fit",
+        path: ["budgetRange"],
+      });
+    }
+    return;
+  }
+  if (!data.interestedIn.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Select at least one service",
+      path: ["interestedIn"],
+    });
+  }
 });
 
 export type WebsiteLeadInput = z.infer<typeof websiteLeadSchema>;

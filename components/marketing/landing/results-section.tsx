@@ -1,91 +1,94 @@
-import Image from "next/image";
-import { SectionShell, ZigZagRow } from "@/components/marketing/primitives/section-shell";
+import { SectionShell } from "@/components/marketing/primitives/section-shell";
 import { Eyebrow } from "@/components/marketing/primitives/eyebrow";
+import { FloatingStatCard } from "@/components/marketing/primitives/floating-stat-card";
+import { GoogleSerpMock } from "@/components/marketing/primitives/google-serp-mock";
+import { SeoToolkitMock } from "@/components/marketing/primitives/seo-toolkit-mock";
+import { MARKETING_COPY } from "@/lib/agency/marketing-copy";
 
-interface ResultsSectionProps {
-  images: string[];
-}
-
-const STATS = [
-  {
-    value: "#58 → #7",
-    label: "Google ranking jump",
-    sub: "Local HVAC — page one for a money keyword",
-  },
-  {
-    value: "+23%",
-    label: "More site visits",
-    sub: "Average lift in the first 90 days",
-  },
-  {
-    value: "Weekly",
-    label: "Reports you'll read",
-    sub: "Rankings & traffic in plain English",
-  },
-];
-
-export function ResultsSection({ images }: ResultsSectionProps) {
-  const image = images[0];
+export function ResultsSection() {
+  const outcomes = MARKETING_COPY.outcomes;
+  const hero = outcomes[0];
 
   return (
-    <SectionShell id="results" tone="light">
+    <SectionShell id="results" band="ink" diagonalTop diagonalBottom>
       <div className="mkt-container">
-        <ZigZagRow
-          image={
-            image ? (
-              <div className="relative">
-                <div className="mkt-frame-back" aria-hidden />
-                <div className="mkt-image-stack relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl lg:-mt-6">
-                  <Image
-                    src={image}
-                    alt="Commercial construction — the kind of work my clients do"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 45vw"
-                  />
-                </div>
-                <div className="mkt-slab mkt-slab-dark absolute -bottom-8 -right-4 z-20 max-w-[14rem] p-4 lg:-right-10">
-                  <p className="text-xs font-bold uppercase tracking-widest text-accent-bright">
-                    Real work
-                  </p>
-                  <p className="mt-1 text-sm font-medium">Sites for people who build things</p>
-                </div>
-              </div>
-            ) : (
-              <div />
-            )
-          }
-        >
-          <div className="lg:pl-4">
-            <Eyebrow label="Real numbers" />
-            <h2 className="mkt-headline mt-4">
+        <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-5">
+            <Eyebrow index="03" label="Results" light />
+            <h2 className="mkt-headline mt-5 text-white">
               More calls. Better rankings.{" "}
-              <span className="mkt-headline-gradient">Receipts included.</span>
+              <span className="text-[var(--mkt-orange-bright)]">Receipts included.</span>
             </h2>
-            <p className="mkt-lead mt-5">
-              I don&apos;t sell hope. Rankings go up, the phone rings more, and you get a
-              weekly report that shows exactly what moved.
+            <p className="mkt-lead mt-5 text-white/70">
+              Big numbers tied to real trade shops — not vague &ldquo;results.&rdquo; Rankings
+              go up, the phone rings more, and you get a weekly report that shows what moved.
             </p>
 
-            <dl className="relative z-10 mt-10 grid gap-4 sm:grid-cols-3 lg:-mr-12">
-              {STATS.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className="mkt-card-light mkt-card-light-hover p-5"
-                  style={{ marginTop: i === 1 ? "1.5rem" : undefined }}
-                >
-                  <dt className="font-display text-xl font-bold tabular-nums text-indigo-600">
+            <p className="mt-12 font-display text-5xl font-bold tabular-nums tracking-tight text-[var(--mkt-orange-bright)] sm:text-6xl">
+              {hero.value}
+            </p>
+            <p className="mt-2 text-sm text-white/50">
+              {hero.client} · {hero.channel}
+            </p>
+
+            <ul className="mt-10 space-y-0">
+              {outcomes.map((stat) => (
+                <li key={stat.title} className="mkt-stat-row">
+                  <p className="font-display text-2xl font-bold tabular-nums text-white">
                     {stat.value}
-                  </dt>
-                  <dd className="mt-2">
-                    <p className="text-sm font-semibold text-[#0c0c12]">{stat.label}</p>
-                    <p className="mt-1 text-xs text-zinc-500">{stat.sub}</p>
-                  </dd>
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white/90">{stat.title}</p>
+                  <p className="mt-0.5 text-xs text-white/45">
+                    {stat.client} · {stat.channel}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="relative lg:col-span-7">
+            <div className="relative mx-auto max-w-lg lg:ml-auto lg:mr-8">
+              <div className="mkt-corner-frame" aria-hidden />
+              <div className="relative z-[1]">
+                <GoogleSerpMock
+                  query="general contractor near me"
+                  businessName="Local GC"
+                  rankBadge="#41 → #5"
+                />
+              </div>
+
+              <div className="absolute -bottom-8 -left-4 z-[2] hidden w-[58%] border-4 border-[var(--mkt-ink)] shadow-xl sm:block lg:-left-10">
+                <SeoToolkitMock variant="seo" className="shadow-none" />
+              </div>
+
+              <FloatingStatCard
+                label={outcomes[1].client}
+                value={outcomes[1].value}
+                hint={outcomes[1].channel}
+                className="absolute -right-2 top-8 z-20 hidden max-w-[11rem] sm:block lg:-right-6"
+              />
+            </div>
+
+            <div className="mt-20 grid gap-3 sm:grid-cols-2">
+              {outcomes.slice(0, 4).map((outcome) => (
+                <div
+                  key={outcome.title}
+                  className="border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm"
+                >
+                  <p className="font-display text-3xl font-bold tabular-nums text-[var(--mkt-orange-bright)]">
+                    {outcome.value}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-snug text-white">
+                    {outcome.title}
+                  </p>
+                  <p className="mt-1 text-xs text-white/45">
+                    {outcome.client} · {outcome.channel}
+                  </p>
                 </div>
               ))}
-            </dl>
+            </div>
           </div>
-        </ZigZagRow>
+        </div>
       </div>
     </SectionShell>
   );

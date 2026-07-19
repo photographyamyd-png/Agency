@@ -1,5 +1,6 @@
 import { MarketingNav } from "@/components/marketing/marketing-nav";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { LandingScrollNav } from "@/components/marketing/landing-scroll-nav";
 
 export function MarketingLayout({
   businessName,
@@ -24,7 +25,7 @@ export function MarketingLayout({
         email={email}
         phone={phone}
       />
-      <main className="flex-1 pt-[4.25rem]">{children}</main>
+      <main className="flex-1 pt-[6.75rem]">{children}</main>
       <MarketingFooter
         businessName={businessName}
         logoUrl={logoUrl}
@@ -32,6 +33,7 @@ export function MarketingLayout({
         phone={phone}
         chickenImage={chickenImage}
       />
+      <LandingScrollNav />
     </div>
   );
 }

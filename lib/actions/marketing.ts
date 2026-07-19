@@ -19,8 +19,10 @@ export async function submitWebsiteLead(
     email: formData.get("email"),
     phone: formData.get("phone") || undefined,
     website: formData.get("website") || undefined,
+    budgetRange: formData.get("budgetRange") || undefined,
     interestedIn: formData.getAll("interestedIn").map(String),
     problemSummary: formData.get("problemSummary") || undefined,
+    formVariant: formData.get("formVariant") || undefined,
   };
 
   const parsed = websiteLeadSchema.safeParse(raw);
@@ -28,19 +30,32 @@ export async function submitWebsiteLead(
     return { error: parsed.error.issues[0]?.message ?? "Invalid form data" };
   }
 
-  const data = parsed.data;
+  const { formVariant, ...data } = parsed.data;
+  const interestedIn =
+    data.interestedIn.length > 0
+      ? data.interestedIn
+      : formVariant === "qualify"
+        ? ["INTRO_CALL"]
+        : [];
 
   let lead;
   try {
     lead = await prisma.lead.create({
       data: {
-        ...data,
+        businessName: data.businessName,
+        contactName: data.contactName,
+        email: data.email,
+        phone: data.phone || null,
         website: data.website || null,
-        source: "website",
+        budgetRange: data.budgetRange || null,
+        interestedIn,
+        problemSummary: data.problemSummary || null,
+        source: formVariant === "qualify" ? "website_qualify" : "website",
         status: "NEW",
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("submitWebsiteLead: failed to create lead", err);
     return { error: "Unable to save your request. Please try again later." };
   }
 

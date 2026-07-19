@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        display: ["var(--font-plus-jakarta)", "system-ui", "sans-serif"],
+        display: ["var(--font-source-sans)", "system-ui", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
@@ -56,10 +56,20 @@ const config: Config = {
           ink: "var(--mkt-ink)",
           paper: "var(--mkt-paper)",
           stone: "var(--mkt-stone)",
-          accent: "var(--mkt-accent)",
-          "accent-bright": "var(--mkt-accent-bright)",
+          accent: {
+            DEFAULT: "var(--mkt-accent)",
+            bright: "var(--mkt-accent-bright)",
+            soft: "var(--mkt-accent-soft)",
+          },
+          text: "var(--mkt-text)",
           muted: "var(--mkt-muted)",
           border: "var(--mkt-border)",
+          orange: {
+            DEFAULT: "var(--mkt-orange)",
+            bright: "var(--mkt-orange-bright)",
+            deep: "var(--mkt-orange-deep)",
+            muted: "var(--mkt-orange-muted)",
+          },
         },
       },
       borderRadius: {
@@ -69,6 +79,7 @@ const config: Config = {
       },
       boxShadow: {
         "accent-glow": "0 0 24px var(--accent-glow)",
+        "mkt-float": "0 24px 48px -12px rgba(12, 14, 18, 0.28)",
       },
     },
   },

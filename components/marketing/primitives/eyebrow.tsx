@@ -11,7 +11,7 @@ export function Eyebrow({ index, label, light, className }: EyebrowProps) {
   return (
     <p className={cn("mkt-eyebrow", light && "mkt-eyebrow-light", className)}>
       {index && <span className="mr-2 tabular-nums">{index}</span>}
-      {index && <span className="mr-2 opacity-60">·</span>}
+      {index && <span className="mr-2 opacity-50">·</span>}
       {label}
     </p>
   );
