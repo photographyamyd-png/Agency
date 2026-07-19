@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/reports?type=auto",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/maintenance",
+      "schedule": "0 7 1 * *"
+    },
+    {
+      "path": "/api/cron/pagespeed",
+      "schedule": "0 9 * * 3"
     }
   ]
 }

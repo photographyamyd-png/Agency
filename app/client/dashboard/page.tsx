@@ -9,7 +9,7 @@ export default async function ClientDashboardPage() {
   const session = await requireClient();
   const clientId = session.user.clientId!;
 
-  const [client, latestReport, keywords, recentEvents] = await Promise.all([
+  const [client, latestReport, keywords, recentEvents, monthlyReports] = await Promise.all([
     prisma.client.findUnique({
       where: { id: clientId },
       include: { brandProfile: true },
@@ -30,7 +30,16 @@ export default async function ClientDashboardPage() {
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
+    prisma.monthlyReport.findMany({
+      where: { clientId },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    }),
   ]);
+
+  const reviewTargets = client?.brandProfile?.reviewTargetsJson as {
+    reviewLink?: string;
+  } | null;
 
   const highlights = (latestReport?.highlights as string[] | null) ?? [];
 
@@ -148,6 +157,36 @@ export default async function ClientDashboardPage() {
             className="mt-3 inline-block text-sm font-medium text-accent-bright hover:underline"
           >
             Connect integrations →
+          </Link>
+        </section>
+      )}
+
+      {reviewTargets?.reviewLink && (
+        <section className="rounded-xl border border-border-bright bg-surface-raised p-6 text-center">
+          <p className="text-sm text-muted">Happy with our work? Leave us a Google review — it takes 60 seconds.</p>
+          <a
+            href={reviewTargets.reviewLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-sm font-medium text-accent-bright hover:underline"
+          >
+            Leave a review →
+          </a>
+        </section>
+      )}
+
+      {monthlyReports.length > 0 && (
+        <section className="rounded-xl border border-border-bright bg-surface-raised p-6">
+          <h2 className="text-sm font-medium border-l-4 border-accent pl-3">Monthly reports</h2>
+          <ul className="mt-4 space-y-2">
+            {monthlyReports.map((r) => (
+              <li key={r.id} className="text-sm text-muted">
+                {new Date(r.periodStart).toLocaleDateString()} — {r.summary?.slice(0, 120)}…
+              </li>
+            ))}
+          </ul>
+          <Link href="/client/reports" className="mt-3 inline-block text-sm text-accent-bright hover:underline">
+            View all reports →
           </Link>
         </section>
       )}

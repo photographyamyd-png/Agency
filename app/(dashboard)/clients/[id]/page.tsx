@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { notFound, redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
+import { getClientWorkspaceData } from "@/lib/data/client-workspace";
+import { getMaintenanceChecklist } from "@/lib/actions/maintenance";
+import { getCurrentWorkflowTab } from "@/lib/blueprint/workflow";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ClientWorkspaceTabs } from "@/components/clients/client-workspace-tabs";
 import { Button } from "@/components/ui/button";
 
 interface ClientPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; browse?: string }>;
 }
 
 export default async function ClientDetailPage({
@@ -17,36 +19,28 @@ export default async function ClientDetailPage({
 }: ClientPageProps) {
   await requireAdmin();
   const { id } = await params;
-  const { tab = "overview" } = await searchParams;
+  const { tab, browse } = await searchParams;
 
-  const client = await prisma.client.findUnique({
-    where: { id },
-    include: {
-      lead: { select: { id: true, businessName: true } },
-      brandProfile: true,
-      portalUser: { select: { email: true, lastLoginAt: true } },
-      accessItems: { orderBy: { requestedAt: "asc" } },
-      launchChecklist: { orderBy: { order: "asc" } },
-      weeklyReports: { orderBy: { createdAt: "desc" }, take: 5 },
-      integrations: true,
-      keywords: {
-        include: {
-          rankSnapshots: { orderBy: { capturedAt: "desc" }, take: 2 },
-        },
-        take: 5,
-      },
-      systemEvents: { orderBy: { createdAt: "desc" }, take: 10 },
-    },
-  });
+  let client = await getClientWorkspaceData(id);
 
   if (!client) {
     notFound();
   }
 
+  // Default: land on the current blueprint step (unless browsing freely or on overview)
+  if (!tab && browse !== "1") {
+    redirect(`/clients/${id}?tab=${getCurrentWorkflowTab(client)}`);
+  }
+
+  if (tab === "reports" && !client.maintenanceLogs[0]) {
+    await getMaintenanceChecklist(id);
+    client = (await getClientWorkspaceData(id))!;
+  }
+
   return (
     <DashboardShell
       title={client.legalBusinessName}
-      description="Client workspace"
+      description="Client workspace — Local SEO Blueprint delivery"
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -58,7 +52,11 @@ export default async function ClientDetailPage({
         </div>
       }
     >
-      <ClientWorkspaceTabs client={client} activeTab={tab} />
+      <ClientWorkspaceTabs
+        client={client}
+        activeTab={tab ?? "overview"}
+        browseMode={browse === "1"}
+      />
     </DashboardShell>
   );
 }

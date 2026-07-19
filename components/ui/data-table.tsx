@@ -14,7 +14,6 @@ export interface DataTableProps<T> {
   rowKey: (row: T) => string;
   zebra?: boolean;
   className?: string;
-  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T>({
@@ -23,7 +22,6 @@ export function DataTable<T>({
   rowKey,
   zebra = false,
   className,
-  onRowClick,
 }: DataTableProps<T>) {
   return (
     <div
@@ -53,11 +51,9 @@ export function DataTable<T>({
           {data.map((row, index) => (
             <tr
               key={rowKey(row)}
-              onClick={() => onRowClick?.(row)}
               className={cn(
                 "h-10 border-b border-border last:border-0 transition-colors hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50",
-                zebra && index % 2 === 1 && "bg-surface/50",
-                onRowClick && "cursor-pointer"
+                zebra && index % 2 === 1 && "bg-surface/50"
               )}
             >
               {columns.map((col) => (

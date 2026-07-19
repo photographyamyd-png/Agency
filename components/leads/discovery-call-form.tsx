@@ -73,6 +73,9 @@ export function DiscoveryCallForm({ leadId, discoveryCall }: DiscoveryCallFormPr
           { name: "hasDomainAccess", label: "Has domain access", checked: discoveryCall?.hasDomainAccess },
           { name: "hasAnalyticsAccess", label: "Has analytics access", checked: discoveryCall?.hasAnalyticsAccess },
           { name: "hasAdsAccount", label: "Has ads account", checked: discoveryCall?.hasAdsAccount },
+          { name: "hasCmsAccess", label: "Has CMS access", checked: discoveryCall?.hasCmsAccess },
+          { name: "hasHostingAccess", label: "Has hosting access", checked: discoveryCall?.hasHostingAccess },
+          { name: "hasGscAccess", label: "Has GSC access", checked: discoveryCall?.hasGscAccess },
           { name: "decisionMaker", label: "Decision maker present", checked: discoveryCall?.decisionMaker },
         ].map(({ name, label, checked }) => (
           <label key={name} className="flex items-center gap-2 text-sm">
@@ -80,6 +83,54 @@ export function DiscoveryCallForm({ leadId, discoveryCall }: DiscoveryCallFormPr
             {label}
           </label>
         ))}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="topServices" className="text-xs font-medium text-muted">Top services / revenue split</label>
+          <Input id="topServices" name="topServices" defaultValue={discoveryCall?.topServices ?? ""} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="targetCities" className="text-xs font-medium text-muted">Target cities / service radius</label>
+          <Input id="targetCities" name="targetCities" defaultValue={discoveryCall?.targetCities ?? ""} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="avgJobValue" className="text-xs font-medium text-muted">Avg job/ticket value</label>
+          <Input id="avgJobValue" name="avgJobValue" defaultValue={discoveryCall?.avgJobValue ?? ""} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="closeRate" className="text-xs font-medium text-muted">Estimated close rate</label>
+          <Input id="closeRate" name="closeRate" defaultValue={discoveryCall?.closeRate ?? ""} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="serviceCapacity" className="text-xs font-medium text-muted">Service capacity (jobs/week)</label>
+          <Input id="serviceCapacity" name="serviceCapacity" defaultValue={discoveryCall?.serviceCapacity ?? ""} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="revenueSplit" className="text-xs font-medium text-muted">Revenue split per service</label>
+          <Input id="revenueSplit" name="revenueSplit" defaultValue={discoveryCall?.revenueSplit ?? ""} />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="seasonalPatterns" className="text-xs font-medium text-muted">Seasonal patterns</label>
+        <Textarea id="seasonalPatterns" name="seasonalPatterns" rows={2} defaultValue={discoveryCall?.seasonalPatterns ?? ""} />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="leadSources" className="text-xs font-medium text-muted">Lead sources & marketing history</label>
+        <Textarea id="leadSources" name="leadSources" rows={2} defaultValue={discoveryCall?.leadSources ?? ""} />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="reputationNotes" className="text-xs font-medium text-muted">Reputation situation</label>
+        <Textarea id="reputationNotes" name="reputationNotes" rows={2} defaultValue={discoveryCall?.reputationNotes ?? ""} />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="knownCompetitors" className="text-xs font-medium text-muted">Known competitors</label>
+        <Textarea id="knownCompetitors" name="knownCompetitors" rows={2} defaultValue={discoveryCall?.knownCompetitors ?? ""} />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="brandVoice" className="text-xs font-medium text-muted">Brand voice & guidelines</label>
+        <Textarea id="brandVoice" name="brandVoice" rows={2} defaultValue={discoveryCall?.brandVoice ?? ""} />
       </div>
 
       <div className="space-y-1.5">

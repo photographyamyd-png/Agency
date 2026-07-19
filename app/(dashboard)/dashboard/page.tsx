@@ -5,8 +5,11 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ViewToggle } from "@/components/view-toggle/view-toggle";
 import { AgencyView } from "@/components/dashboard/agency-view";
 import { ClientView } from "@/components/dashboard/client-view";
+import { DatabaseSetupNotice } from "@/components/errors/database-setup-notice";
 import { Button } from "@/components/ui/button";
 import { KpiSkeletonGrid } from "@/components/ui/skeleton";
+import { assertPostgresDatabaseUrl } from "@/lib/db/validate-env";
+import { getErrorMessage, isDatabaseConfigError } from "@/lib/errors/message";
 import { getAgencyDashboardData } from "@/lib/data/dashboard";
 import { getCrossClientMetrics } from "@/lib/data/dashboard";
 
@@ -46,9 +49,19 @@ async function DashboardClient() {
   );
 }
 
+function getDatabaseConfigError(): string | null {
+  try {
+    assertPostgresDatabaseUrl();
+    return null;
+  } catch (error) {
+    return getErrorMessage(error);
+  }
+}
+
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const params = await searchParams;
   const view = params.view === "client" ? "client" : "agency";
+  const databaseError = getDatabaseConfigError();
 
   return (
     <DashboardShell
@@ -66,9 +79,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </>
       }
     >
-      <Suspense fallback={<KpiSkeletonGrid count={4} />}>
-        {view === "client" ? <DashboardClient /> : <DashboardAgency />}
-      </Suspense>
+      {databaseError && isDatabaseConfigError(databaseError) ? (
+        <DatabaseSetupNotice message={databaseError} />
+      ) : (
+        <Suspense fallback={<KpiSkeletonGrid count={4} />}>
+          {view === "client" ? <DashboardClient /> : <DashboardAgency />}
+        </Suspense>
+      )}
     </DashboardShell>
   );
 }

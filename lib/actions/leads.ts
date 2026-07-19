@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation";
 import type { LeadStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/session";
+import { seedCitationsForClient } from "@/lib/blueprint/instantiate";
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -200,6 +201,18 @@ export async function upsertDiscoveryCall(formData: FormData): Promise<void> {
     hasDomainAccess: formData.get("hasDomainAccess") === "on",
     hasAnalyticsAccess: formData.get("hasAnalyticsAccess") === "on",
     hasAdsAccount: formData.get("hasAdsAccount") === "on",
+    hasCmsAccess: formData.get("hasCmsAccess") === "on",
+    hasHostingAccess: formData.get("hasHostingAccess") === "on",
+    hasGscAccess: formData.get("hasGscAccess") === "on",
+    revenueSplit: formData.get("revenueSplit") || undefined,
+    targetCities: formData.get("targetCities") || undefined,
+    avgJobValue: formData.get("avgJobValue") || undefined,
+    closeRate: formData.get("closeRate") || undefined,
+    serviceCapacity: formData.get("serviceCapacity") || undefined,
+    leadSources: formData.get("leadSources") || undefined,
+    reputationNotes: formData.get("reputationNotes") || undefined,
+    knownCompetitors: formData.get("knownCompetitors") || undefined,
+    brandVoice: formData.get("brandVoice") || undefined,
     fitDecision: formData.get("fitDecision") || undefined,
   };
 
@@ -265,6 +278,8 @@ export async function convertLeadToClient(leadId: string): Promise<void> {
       },
     },
   });
+
+  await seedCitationsForClient(client.id);
 
   revalidatePath("/leads");
   revalidatePath("/clients");

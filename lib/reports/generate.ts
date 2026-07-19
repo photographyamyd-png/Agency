@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { sendTemplatedEmail } from "@/lib/email/gmail";
 import { emitSystemEvent } from "@/lib/events/emit";
 import { SYSTEM_EVENT_TYPES } from "@/lib/events/types";
 import { buildHighlightMessages } from "./highlights";
+import { gatherMonthlyKpis } from "./monthly-kpis";
 
 function periodDaysAgo(days: number) {
   const end = new Date();
@@ -75,6 +77,7 @@ export async function generateMonthlyReport(clientId: string) {
   if (existing) return existing;
 
   const highlights = await buildHighlightMessages(clientId);
+  const kpis = await gatherMonthlyKpis(clientId);
   const summary =
     highlights.length > 0
       ? highlights.slice(0, 3).join(" ")
@@ -86,7 +89,7 @@ export async function generateMonthlyReport(clientId: string) {
       periodStart: start,
       periodEnd: end,
       summary,
-      dataJson: { highlights },
+      dataJson: { highlights, kpis } as unknown as Prisma.InputJsonValue,
     },
   });
 

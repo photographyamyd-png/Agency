@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { assertPostgresDatabaseUrl } from "@/lib/db/validate-env";
 import { formatClientStatus } from "@/lib/format";
 
 export async function getAgencyDashboardData() {
+  assertPostgresDatabaseUrl();
   const [
     clients,
     leads,
@@ -167,6 +169,7 @@ function eventTypeVariant(type: string): "success" | "default" | "danger" {
 }
 
 export async function getCrossClientMetrics() {
+  assertPostgresDatabaseUrl();
   const clients = await prisma.client.findMany({
     where: { status: { in: ["ACTIVE_BUILD", "ACTIVE_RETAINER"] } },
     include: {

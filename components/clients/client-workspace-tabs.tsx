@@ -1,208 +1,223 @@
 import Link from "next/link";
-import type {
-  AccessChecklistItem,
-  BrandProfile,
-  Client,
-  ClientIntegration,
-  ClientPortalUser,
-  Keyword,
-  LaunchChecklistItem,
-  Lead,
-  RankSnapshot,
-  SystemEvent,
-  WeeklyReport,
-} from "@prisma/client";
+import type { ClientWorkspaceData } from "@/lib/data/client-workspace";
+import { computePhaseProgress } from "@/lib/blueprint/phase-progress";
+import { canAccessWorkflowTab } from "@/lib/blueprint/workflow";
+import { emptyBaselineAudit } from "@/lib/blueprint/phase-1-intake";
+import { baselineAuditDataSchema } from "@/lib/validation/blueprint";
 import { ClientPortalInviteForm } from "@/components/clients/portal-invite-form";
-import { Badge } from "@/components/ui/badge";
+import { BaselineAuditWizard } from "@/components/clients/baseline-audit-wizard";
+import { BusinessIntelForm } from "@/components/clients/business-intel-form";
+import { CompetitorAudit } from "@/components/clients/competitor-audit";
+import { KeywordManager } from "@/components/clients/keyword-manager";
+import { SitemapBuilder } from "@/components/clients/sitemap-builder";
+import { OnPageSeoMatrix } from "@/components/clients/on-page-seo-matrix";
+import { GoldenNapEditor } from "@/components/clients/golden-nap-editor";
+import { CitationTracker } from "@/components/clients/citation-tracker";
+import { GbpHub } from "@/components/clients/gbp-hub";
+import { ReviewEngine } from "@/components/clients/review-engine";
+import { LinksGeoPanel } from "@/components/clients/links-geo-panel";
+import { VaultPanel } from "@/components/clients/vault-panel";
+import { MaintenancePanel } from "@/components/clients/maintenance-panel";
+import { PhaseProgress, QuickReferencePanel } from "@/components/clients/phase-progress";
+import { BlueprintWorkflowGuide } from "@/components/clients/blueprint-workflow-guide";
+import { WorkflowTabNav } from "@/components/clients/workflow-tab-nav";
+import { OnboardingProgressPanel } from "@/components/clients/onboarding-progress-panel";
+import { Button } from "@/components/ui/button";
 import { StatHighlight } from "@/components/ui/stat-highlight";
-import { cn } from "@/lib/utils";
-
-type ClientWithRelations = Client & {
-  lead: Pick<Lead, "id" | "businessName"> | null;
-  brandProfile: BrandProfile | null;
-  portalUser: Pick<ClientPortalUser, "email" | "lastLoginAt"> | null;
-  accessItems: AccessChecklistItem[];
-  launchChecklist: LaunchChecklistItem[];
-  weeklyReports: WeeklyReport[];
-  integrations: ClientIntegration[];
-  keywords: (Keyword & { rankSnapshots: RankSnapshot[] })[];
-  systemEvents: SystemEvent[];
-};
-
-const TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "profile", label: "Profile" },
-  { id: "checklists", label: "Checklists" },
-  { id: "reports", label: "Reports" },
-  { id: "portal", label: "Portal" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
+import { Badge } from "@/components/ui/badge";
 
 interface ClientWorkspaceTabsProps {
-  client: ClientWithRelations;
+  client: ClientWorkspaceData;
   activeTab: string;
+  browseMode?: boolean;
 }
 
-export function ClientWorkspaceTabs({
-  client,
-  activeTab,
-}: ClientWorkspaceTabsProps) {
-  const tab = (TABS.some((t) => t.id === activeTab) ? activeTab : "overview") as TabId;
+export function ClientWorkspaceTabs({ client, activeTab, browseMode = false }: ClientWorkspaceTabsProps) {
+  const tabIds = ["overview", "intake", "research", "keywords", "sitemap", "onpage", "gbp", "citations", "reviews", "links", "reports", "vault", "portal"];
+  const tab = tabIds.includes(activeTab) ? activeTab : "overview";
+
+  const access = browseMode ? { allowed: true } : canAccessWorkflowTab(client, tab);
+  const effectiveTab = access.allowed ? tab : "overview";
+
+  const phaseCompletion = computePhaseProgress(client);
 
   const rankWin = client.keywords.find((kw) => {
     const [cur, prev] = kw.rankSnapshots;
     return cur?.rank != null && prev?.rank != null && prev.rank > cur.rank;
   });
 
+  const auditRaw = client.baselineAudits[0]?.dataJson;
+  const auditParsed = baselineAuditDataSchema.safeParse(auditRaw ?? emptyBaselineAudit());
+  const auditData = auditParsed.success ? auditParsed.data : emptyBaselineAudit();
+
+  const intel = (client.brandProfile?.businessIntelJson as Record<string, string>) ?? {};
+  const siteUrl = client.brandProfile?.existingSiteUrl ?? client.brandProfile?.domain
+    ? `https://${client.brandProfile.domain}`
+    : null;
+
+  const flatPages = client.pages.flatMap((p) => [p, ...p.children]);
+
   return (
     <div className="space-y-6">
-      <nav className="flex flex-wrap gap-1 border-b border-border-bright pb-px">
-        {TABS.map(({ id, label }) => (
-          <Link
-            key={id}
-            href={`/clients/${client.id}?tab=${id}`}
-            className={cn(
-              "rounded-t-md px-4 py-2 text-sm font-medium transition-colors",
-              tab === id
-                ? "bg-surface-raised text-accent-bright border border-border-bright border-b-transparent -mb-px"
-                : "text-muted hover:text-foreground"
-            )}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <BlueprintWorkflowGuide client={client} activeTab={effectiveTab} compact />
 
-      {tab === "overview" && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-border-bright bg-surface-raised p-6 shadow-lg shadow-black/20 space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">Status</span>
-              <Badge variant="muted">{client.status}</Badge>
+      {!access.allowed && tab !== "overview" && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-sm text-muted">
+            <span className="font-medium text-foreground">This phase is locked.</span>{" "}
+            {access.reason}
+          </p>
+          {access.redirectTab && (
+            <Button size="sm" asChild>
+              <Link href={`/clients/${client.id}?tab=${access.redirectTab}`}>
+                Go to current step
+              </Link>
+            </Button>
+          )}
+        </div>
+      )}
+
+      <WorkflowTabNav clientId={client.id} client={client} activeTab={effectiveTab} browseMode={browseMode} />
+
+      {effectiveTab === "overview" && (
+        <div className="space-y-6">
+          <OnboardingProgressPanel client={client} />
+          <BlueprintWorkflowGuide client={client} activeTab={effectiveTab} />
+          <PhaseProgress phaseCompletion={phaseCompletion} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-border-bright bg-surface-raised p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted">Status</span>
+                <Badge variant="muted">{client.status}</Badge>
+              </div>
+              <p className="text-sm text-muted">
+                {client.integrations.filter((i) => i.status === "CONNECTED").length} integrations ·{" "}
+                {client.keywords.length} keywords · {client.citations.filter((c) => c.status === "LIVE").length} live citations
+              </p>
             </div>
-            {client.billingEmail && (
-              <p className="text-sm">
-                <span className="text-muted">Billing email:</span> {client.billingEmail}
-              </p>
+            {rankWin && (
+              <StatHighlight
+                stat={`#${rankWin.rankSnapshots[1]!.rank} → #${rankWin.rankSnapshots[0]!.rank}`}
+                label={`${rankWin.term} rank improvement`}
+              />
             )}
-            {client.lead && (
-              <p className="text-sm">
-                <span className="text-muted">Converted from lead:</span>{" "}
-                <Link
-                  href={`/leads/${client.lead.id}`}
-                  className="text-accent-bright hover:underline"
-                >
-                  {client.lead.businessName}
-                </Link>
-              </p>
-            )}
-            <p className="text-sm text-muted">
-              {client.integrations.filter((i) => i.status === "CONNECTED").length} integrations
-              connected · {client.keywords.length} keywords tracked
-            </p>
           </div>
-          {rankWin && (
-            <StatHighlight
-              stat={`#${rankWin.rankSnapshots[1]!.rank} → #${rankWin.rankSnapshots[0]!.rank}`}
-              label={`${rankWin.term} rank improvement`}
-            />
-          )}
-          {client.systemEvents.length > 0 && (
-            <div className="lg:col-span-2 rounded-xl border border-border-bright bg-surface-raised p-6">
-              <h3 className="text-sm font-medium mb-4">Recent activity</h3>
-              <ul className="space-y-2">
-                {client.systemEvents.map((e) => (
-                  <li key={e.id} className="flex justify-between text-sm text-muted">
-                    <span>{e.type.replace(/_/g, " ").toLowerCase()}</span>
-                    <span>{new Date(e.createdAt).toLocaleDateString()}</span>
+          <QuickReferencePanel />
+        </div>
+      )}
+
+      {access.allowed && effectiveTab === "intake" && (
+        <div className="space-y-8">
+          <OnboardingProgressPanel client={client} />
+          <BusinessIntelForm clientId={client.id} data={intel} />
+          <BaselineAuditWizard clientId={client.id} auditData={auditData} siteUrl={siteUrl} />
+        </div>
+      )}
+
+      {access.allowed && effectiveTab === "research" && (
+        <CompetitorAudit
+          clientId={client.id}
+          competitors={client.competitors}
+          geoGridSnapshots={client.geoGridSnapshots}
+          actionPlanItems={client.actionPlanItems}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "keywords" && (
+        <KeywordManager
+          clientId={client.id}
+          keywords={client.keywords}
+          serviceArea={(client.brandProfile?.serviceAreas as string[])?.[0] ?? ""}
+          primarySeed={client.brandProfile?.primaryKeyword}
+          pages={flatPages}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "sitemap" && (
+        <SitemapBuilder
+          clientId={client.id}
+          pages={client.pages}
+          techHealthLogs={client.techHealthLogs}
+          siteUrl={siteUrl}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "onpage" && (
+        <OnPageSeoMatrix
+          clientId={client.id}
+          pages={client.pages}
+          siteChecklistRaw={client.brandProfile?.siteSeoChecklistJson}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "gbp" && (
+        <GbpHub
+          clientId={client.id}
+          gbpActivity={client.gbpActivity}
+          gbpConnected={client.brandProfile?.gbpConnected ?? false}
+          siteUrl={siteUrl}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "citations" && (
+        <div className="space-y-8">
+          <GoldenNapEditor
+            clientId={client.id}
+            goldenNap={(client.brandProfile?.goldenNapJson as Record<string, unknown>) ?? null}
+          />
+          <CitationTracker clientId={client.id} citations={client.citations} />
+        </div>
+      )}
+
+      {access.allowed && effectiveTab === "reviews" && (
+        <ReviewEngine
+          clientId={client.id}
+          reviewSnapshots={client.reviewSnapshots}
+          reviewTargets={(client.brandProfile?.reviewTargetsJson as Record<string, unknown>) ?? null}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "links" && (
+        <LinksGeoPanel
+          clientId={client.id}
+          localLinks={client.localLinks}
+          contentItems={client.contentItems}
+          geoReadinessRaw={client.brandProfile?.geoReadinessJson}
+        />
+      )}
+
+      {access.allowed && effectiveTab === "reports" && (
+        <div className="space-y-8">
+          <MaintenancePanel checklist={client.maintenanceLogs[0] ?? null} />
+          <section>
+            <h3 className="text-sm font-medium mb-3">Weekly Reports</h3>
+            <ul className="space-y-3">
+              {client.weeklyReports.map((r) => {
+                const highlights = (r.highlights as string[] | null) ?? [];
+                return (
+                  <li key={r.id} className="rounded-xl border border-border-bright bg-surface-raised p-4 text-sm">
+                    <p className="font-medium">Week of {new Date(r.periodStart).toLocaleDateString()}</p>
+                    {highlights[0] && <p className="mt-1 text-muted">{highlights[0]}</p>}
                   </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                );
+              })}
+              {client.weeklyReports.length === 0 && (
+                <p className="text-sm text-muted">No reports yet.</p>
+              )}
+            </ul>
+          </section>
         </div>
       )}
 
-      {tab === "profile" && (
-        <div className="rounded-xl border border-border-bright bg-surface-raised p-6 space-y-3 text-sm">
-          {client.brandProfile ? (
-            <>
-              {client.brandProfile.domain && (
-                <p>
-                  <span className="text-muted">Domain:</span> {client.brandProfile.domain}
-                </p>
-              )}
-              {client.brandProfile.industry && (
-                <p>
-                  <span className="text-muted">Industry:</span> {client.brandProfile.industry}
-                </p>
-              )}
-              <p>
-                <span className="text-muted">GA4:</span>{" "}
-                {client.brandProfile.ga4Connected ? "Connected" : "Not connected"}
-              </p>
-              <p>
-                <span className="text-muted">GSC:</span>{" "}
-                {client.brandProfile.gscConnected ? "Connected" : "Not connected"}
-              </p>
-            </>
-          ) : (
-            <p className="text-muted">No brand profile yet — complete onboarding to populate.</p>
-          )}
-        </div>
+      {effectiveTab === "vault" && (
+        <VaultPanel clientId={client.id} entries={client.vaultEntries} />
       )}
 
-      {tab === "checklists" && (
-        <ul className="space-y-2">
-          {[...client.accessItems, ...client.launchChecklist].map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between rounded-lg border border-border-bright bg-surface-raised px-4 py-3 text-sm"
-            >
-              <span>{"label" in item ? item.label : ""}</span>
-              <Badge variant="muted">{String(item.status)}</Badge>
-            </li>
-          ))}
-          {client.accessItems.length === 0 &&
-            client.launchChecklist.length === 0 && (
-              <p className="text-sm text-muted py-8 text-center">No checklist items yet.</p>
-            )}
-        </ul>
-      )}
-
-      {tab === "reports" && (
-        <ul className="space-y-3">
-          {client.weeklyReports.map((r) => {
-            const highlights = (r.highlights as string[] | null) ?? [];
-            return (
-              <li
-                key={r.id}
-                className="rounded-xl border border-border-bright bg-surface-raised p-4 text-sm"
-              >
-                <p className="font-medium">
-                  Week of {new Date(r.periodStart).toLocaleDateString()}
-                </p>
-                {highlights[0] && (
-                  <p className="mt-1 text-muted">{highlights[0]}</p>
-                )}
-              </li>
-            );
-          })}
-          {client.weeklyReports.length === 0 && (
-            <p className="text-sm text-muted py-8 text-center">No reports yet.</p>
-          )}
-        </ul>
-      )}
-
-      {tab === "portal" && (
+      {effectiveTab === "portal" && (
         <div className="rounded-xl border border-border-bright bg-surface-raised p-6 max-w-lg">
           {client.portalUser ? (
             <p className="text-sm text-muted mb-4">
               Portal user: <span className="text-foreground">{client.portalUser.email}</span>
-              {client.portalUser.lastLoginAt && (
-                <> · Last login {new Date(client.portalUser.lastLoginAt).toLocaleDateString()}</>
-              )}
             </p>
           ) : (
             <p className="text-sm text-muted mb-4">No portal account yet.</p>

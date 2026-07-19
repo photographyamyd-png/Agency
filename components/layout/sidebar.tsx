@@ -8,6 +8,8 @@ import {
   UserPlus,
   BarChart3,
   FileText,
+  FileSignature,
+  Activity,
   Settings,
   Menu,
   X,
@@ -21,8 +23,10 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leads", label: "Leads", icon: UserPlus },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/proposals", label: "Proposals", icon: FileSignature },
   { href: "/metrics", label: "Metrics", icon: BarChart3 },
   { href: "/invoices", label: "Invoices", icon: FileText },
+  { href: "/events", label: "Events", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

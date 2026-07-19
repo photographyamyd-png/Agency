@@ -35,6 +35,28 @@ Agency OS is a private web application for running a solo web design + local SEO
 
 ---
 
+## Local SEO Blueprint Integration (v3)
+
+Blueprint sections map to client workspace tabs and `lib/blueprint/`:
+
+| Blueprint § | Workspace tab | Module |
+|---|---|---|
+| 1 Discovery & Intake | Intake & Baseline | `phase-1-intake.ts`, baseline audit wizard |
+| 2 Competitive Research | Research | `competitors.ts`, geo-grid snapshots |
+| 3 Keywords | Keywords | `keywords.ts`, intent tiers |
+| 4–5 Site / Technical | Site Map | `page-templates.ts`, PageSpeed cron |
+| 6 On-Page SEO | On-Page SEO | `seo-checklist-keys.ts`, schema templates |
+| 7 GBP | GBP | `gbp-sops.ts` |
+| 8 Citations | Citations | `citation-directories.ts`, Golden NAP |
+| 9 Reviews | Reviews | review targets JSON |
+| 10–11 Links & GEO | Links & GEO | `geo-checklist.ts`, local links |
+| 12–13 Reporting & Ops | Reports & Ops | `monthly-sops.ts`, `monthly-kpis.ts` |
+| 14 Pricing | Proposals | `pricing-packages.ts` |
+| 15 Quick reference | Overview | `quick-reference.ts` |
+| 16 Free tools | Settings → Tools | `free-tools.ts` |
+
+---
+
 ## 13. UI / Design System [v3]
 
 **This section is the authority for all UI decisions.** Do not use Tailwind defaults, shadcn defaults, or generic dashboard templates as visual starting points.

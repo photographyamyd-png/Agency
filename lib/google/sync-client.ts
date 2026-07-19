@@ -175,15 +175,15 @@ export async function syncClientGoogleData(clientId: string) {
           data: {
             clientId,
             platform: "Google Business Profile",
-            rating: null,
-            count: null,
+            rating: gbpData.rating ?? null,
+            count: gbpData.reviewCount ?? null,
           },
         });
         await prisma.gBPActivityLog.create({
           data: {
             clientId,
             type: "SYNC",
-            content: `GBP location synced: ${gbpData.locationName}`,
+            content: `GBP synced: ${gbpData.locationName}${gbpData.reviewCount != null ? ` · ${gbpData.reviewCount} reviews` : ""}${gbpData.rating != null ? ` · ${gbpData.rating.toFixed(1)}★` : ""}`,
           },
         });
         await prisma.brandProfile.update({

@@ -18,8 +18,13 @@ const settingsSections = [
     href: "/clients",
   },
   {
+    title: "Free Tool Stack",
+    description: "Blueprint §16 — free SEO tools reference (no subscriptions)",
+    href: "/settings/tools",
+  },
+  {
     title: "Cron Jobs",
-    description: "Daily sync at 6am UTC · Weekly reports Mondays 8am UTC (set CRON_SECRET on Vercel)",
+    description: "Daily sync 6am UTC · Weekly reports Mon 8am · Monthly maintenance 1st · PageSpeed weekly",
     href: null,
   },
 ];

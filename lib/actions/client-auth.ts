@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { prisma } from "@/lib/prisma";
@@ -30,11 +31,14 @@ export async function clientPasswordLogin(
   }
 
   try {
-    await signIn("client-credentials", {
+    const result = await signIn("client-credentials", {
       email: user.email,
       clientId: user.clientId,
-      redirectTo: "/client/dashboard",
+      redirect: false,
     });
+    if (result?.error) {
+      return { error: "Invalid email or password" };
+    }
   } catch (err) {
     if (err instanceof AuthError && err.type === "CredentialsSignin") {
       return { error: "Invalid email or password" };
@@ -42,7 +46,7 @@ export async function clientPasswordLogin(
     throw err;
   }
 
-  return null;
+  redirect("/client/dashboard");
 }
 
 export async function requestMagicLink(

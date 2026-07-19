@@ -23,7 +23,7 @@ export default async function LeadsPage() {
         <EmptyState
           icon={UserPlus}
           title="No leads yet"
-          description="Add leads manually from phone calls and referrals, or wait for intake form submissions in Phase 2."
+          description="Add leads manually from phone calls and referrals, or capture them from your marketing homepage."
           actionLabel="Add Lead"
           actionHref="/leads/new"
         />
