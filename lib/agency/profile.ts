@@ -3,11 +3,10 @@ import { DEFAULT_IMAGES } from "@/lib/images/defaults";
 
 const DEFAULT_AGENCY = {
   businessName: "Amy · Web for Trades",
-  tagline: "Websites for people who actually work for a living",
-  heroHeadline:
-    "Stop selling premium work with a website that looks like a 1992 game of Frogger.",
+  tagline: "Websites & local SEO for construction and the trades",
+  heroHeadline: "Be the obvious choice when locals need a contractor",
   heroSubhead:
-    "Aunt Martha—or whoever built your site—meant well, but your digital storefront is costing you the jobs that pay the bills. You're a pro; stop looking like an amateur.",
+    "Show up in Maps and local search, look as professional as your jobsite, and get the phone ringing with jobs that pay.",
   email: "hello@youragency.com",
   phone: "",
   logoUrl: null as string | null,
