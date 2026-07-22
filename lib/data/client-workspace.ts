@@ -40,6 +40,7 @@ export async function getClientWorkspaceData(clientId: string) {
       },
       techHealthLogs: { orderBy: { capturedAt: "desc" }, take: 5 },
       baselineAudits: { orderBy: { capturedAt: "desc" }, take: 1 },
+      baselineReport: true,
       maintenanceLogs: {
         include: { items: { orderBy: { order: "asc" } } },
         orderBy: { generatedAt: "desc" },

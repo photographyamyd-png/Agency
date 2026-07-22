@@ -74,6 +74,13 @@ export async function saveBaselineAuditItem(
     });
   }
 
+  try {
+    const { maybeAutoGenerateBaselineReport } = await import("@/lib/reports/generate");
+    await maybeAutoGenerateBaselineReport(clientId);
+  } catch {
+    // non-fatal
+  }
+
   revalidatePath(`/clients/${clientId}`);
 }
 

@@ -3,8 +3,15 @@ import type { Prisma } from "@prisma/client";
 import { sendTemplatedEmail } from "@/lib/email/gmail";
 import { emitSystemEvent } from "@/lib/events/emit";
 import { SYSTEM_EVENT_TYPES } from "@/lib/events/types";
-import { buildHighlightMessages } from "./highlights";
+import { buildHighlightMessages, computeVsBaseline } from "./highlights";
 import { gatherMonthlyKpis } from "./monthly-kpis";
+import {
+  buildBaselineHighlights,
+  buildBaselineSummary,
+  gatherBaselineSnapshot,
+} from "./baseline-snapshot";
+import { baselineAuditDataSchema } from "@/lib/validation/blueprint";
+import { BASELINE_AUDIT_ITEMS } from "@/lib/blueprint/phase-1-intake";
 
 function periodDaysAgo(days: number) {
   const end = new Date();
@@ -78,6 +85,7 @@ export async function generateMonthlyReport(clientId: string) {
 
   const highlights = await buildHighlightMessages(clientId);
   const kpis = await gatherMonthlyKpis(clientId);
+  const vsBaseline = await computeVsBaseline(clientId);
   const summary =
     highlights.length > 0
       ? highlights.slice(0, 3).join(" ")
@@ -89,7 +97,7 @@ export async function generateMonthlyReport(clientId: string) {
       periodStart: start,
       periodEnd: end,
       summary,
-      dataJson: { highlights, kpis } as unknown as Prisma.InputJsonValue,
+      dataJson: { highlights, kpis, vsBaseline } as unknown as Prisma.InputJsonValue,
     },
   });
 
@@ -98,6 +106,170 @@ export async function generateMonthlyReport(clientId: string) {
     clientId,
     payload: { type: "monthly", reportId: report.id },
   });
+
+  return report;
+}
+
+export async function generateBaselineReport(
+  clientId: string,
+  options: { force?: boolean } = {}
+) {
+  const existing = await prisma.baselineReport.findUnique({
+    where: { clientId },
+  });
+
+  if (existing && !options.force) {
+    return existing;
+  }
+
+  const snapshot = await gatherBaselineSnapshot(clientId);
+  const highlights = buildBaselineHighlights(snapshot);
+  const summary = buildBaselineSummary(snapshot);
+
+  const data = {
+    summary,
+    highlights: highlights as Prisma.InputJsonValue,
+    dataJson: snapshot as unknown as Prisma.InputJsonValue,
+  };
+
+  const report = existing
+    ? await prisma.baselineReport.update({
+        where: { clientId },
+        data: { ...data, sentAt: null },
+      })
+    : await prisma.baselineReport.create({
+        data: { clientId, ...data },
+      });
+
+  await emitSystemEvent({
+    type: SYSTEM_EVENT_TYPES.REPORT_GENERATED,
+    clientId,
+    payload: { type: "baseline", reportId: report.id },
+  });
+
+  return report;
+}
+
+export async function sendBaselineReport(clientId: string) {
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    include: { portalUser: true },
+  });
+  if (!client) return null;
+
+  const report = await prisma.baselineReport.findUnique({
+    where: { clientId },
+  });
+  if (!report) return null;
+
+  const email = client.billingEmail ?? client.portalUser?.email;
+  if (!email) return report;
+
+  const highlights = (report.highlights as string[] | null) ?? [];
+  const highlightHtml = highlights.length
+    ? highlights.map((h) => `• ${h}`).join("\n")
+    : report.summary ?? "Your kickoff SEO baseline is ready in the client portal.";
+
+  const portalUrl = `${process.env.NEXTAUTH_URL ?? ""}/client/reports`;
+
+  await sendTemplatedEmail({
+    to: email,
+    subject: `Baseline SEO report for {{businessName}}`,
+    bodyTemplate: `Hi,
+
+We've captured your kickoff SEO baseline for {{businessName}} — the starting point we'll compare every month:
+
+{{highlights}}
+
+View the full baseline in your client portal: {{portalUrl}}
+
+— Your web agency`,
+    vars: {
+      businessName: client.legalBusinessName,
+      highlights: highlightHtml,
+      portalUrl,
+    },
+    clientId,
+  });
+
+  return prisma.baselineReport.update({
+    where: { clientId },
+    data: { sentAt: new Date() },
+  });
+}
+
+/** Readiness: site URL + (connected Google OR PageSpeed) + (checklist ≥50% OR access onboarding done). */
+export async function isBaselineReportReady(clientId: string): Promise<boolean> {
+  const [client, integrations, techHealth, audit, session] = await Promise.all([
+    prisma.client.findUnique({
+      where: { id: clientId },
+      include: { brandProfile: true },
+    }),
+    prisma.clientIntegration.findMany({ where: { clientId } }),
+    prisma.technicalHealthLog.findFirst({ where: { clientId } }),
+    prisma.baselineAudit.findFirst({
+      where: { clientId },
+      orderBy: { capturedAt: "desc" },
+    }),
+    prisma.onboardingSession.findFirst({
+      where: { clientId },
+      orderBy: { createdAt: "desc" },
+      select: { completedStages: true, status: true },
+    }),
+  ]);
+
+  const siteUrl =
+    client?.brandProfile?.existingSiteUrl ?? client?.brandProfile?.domain ?? null;
+  if (!siteUrl) return false;
+
+  const hasConnectedGoogle = integrations.some(
+    (i) =>
+      i.status === "CONNECTED" &&
+      (i.service === "GA4" ||
+        i.service === "GOOGLE_SEARCH_CONSOLE" ||
+        i.service === "GBP")
+  );
+  if (!hasConnectedGoogle && !techHealth) return false;
+
+  const parsed = audit ? baselineAuditDataSchema.safeParse(audit.dataJson) : null;
+  const checklistDone = parsed?.success
+    ? Object.values(parsed.data).filter((v) => v.status === "done" || v.status === "na")
+        .length
+    : 0;
+  const checklistReady = checklistDone / BASELINE_AUDIT_ITEMS.length >= 0.5;
+
+  const stages = Array.isArray(session?.completedStages)
+    ? (session!.completedStages as string[])
+    : [];
+  const accessDone =
+    session?.status === "COMPLETED" ||
+    stages.includes("ACCESS") ||
+    stages.includes("COMPLETED");
+
+  return checklistReady || accessDone;
+}
+
+export async function maybeAutoGenerateBaselineReport(clientId: string) {
+  const existing = await prisma.baselineReport.findUnique({
+    where: { clientId },
+  });
+  if (existing) return existing;
+
+  const ready = await isBaselineReportReady(clientId);
+  if (!ready) return null;
+
+  const report = await generateBaselineReport(clientId);
+  if (!report) return null;
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    include: { portalUser: true },
+  });
+  const email = client?.billingEmail ?? client?.portalUser?.email;
+  if (email) {
+    await sendBaselineReport(clientId);
+    return prisma.baselineReport.findUnique({ where: { clientId } });
+  }
 
   return report;
 }

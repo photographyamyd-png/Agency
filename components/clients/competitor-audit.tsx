@@ -6,6 +6,7 @@ import {
   generateActionPlanFromResearch,
 } from "@/lib/actions/competitors";
 import { ActionPlanList } from "@/components/clients/action-plan-list";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,8 +37,10 @@ export function CompetitorAudit({
 }: CompetitorAuditProps) {
   return (
     <div className="space-y-8">
+      <SectionGuide guideId="research.overview" />
+
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <h3 className="text-sm font-medium">Map-Pack Competitors (top 3)</h3>
           <form
             action={async () => {
@@ -50,6 +53,7 @@ export function CompetitorAudit({
             </Button>
           </form>
         </div>
+        <SectionGuide guideId="research.mapPack" />
 
         {competitors.map((c) => (
           <form
@@ -117,11 +121,13 @@ export function CompetitorAudit({
 
       <section className="space-y-3">
         <h3 className="text-sm font-medium">Research Action Plan</h3>
+        <SectionGuide guideId="research.actionPlan" />
         <ActionPlanList clientId={clientId} items={actionPlanItems} />
       </section>
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium">Geo-Grid Snapshots</h3>
+        <SectionGuide guideId="research.geoGrid" />
         {geoGridSnapshots.map((s) => (
           <div key={s.id} className="rounded-lg border border-border-bright bg-surface-raised p-4 text-sm space-y-1">
             <div className="flex justify-between">

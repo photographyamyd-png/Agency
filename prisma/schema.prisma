@@ -276,6 +276,7 @@ model Client {
   monthlyReports  MonthlyReport[]
   actionPlanItems ActionPlanItem[]
   baselineAudits  BaselineAudit[]
+  baselineReport  BaselineReport?
   tasks           Task[]
   communications  CommunicationLog[]
   offboarding     OffboardingRecord?
@@ -962,7 +963,19 @@ model BaselineAudit {
   clientId   String
   client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   capturedAt DateTime @default(now())
-  dataJson   Json // rankings, traffic, CWV, citations, reviews, backlinks, on-page issues, competitor comparison
+  dataJson   Json // Phase-1 intake checklist only: { [itemKey]: { status, notes?, completedAt? } }
+}
+
+/// Frozen kickoff SEO snapshot for later progress comparison (one per client).
+model BaselineReport {
+  id          String    @id @default(cuid())
+  clientId    String    @unique
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  summary     String?
+  highlights  Json?
+  dataJson    Json // frozen KPI snapshot from gatherBaselineSnapshot
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
 }
 
 model ActionPlanItem {

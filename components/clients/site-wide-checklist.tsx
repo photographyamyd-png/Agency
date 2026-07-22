@@ -1,5 +1,7 @@
 import { saveSiteChecklistItem } from "@/lib/actions/site-checklist";
 import { SITE_WIDE_CHECKLIST, type SiteChecklistData } from "@/lib/blueprint/site-checklist";
+import { SectionGuide } from "@/components/clients/section-guide";
+import type { SectionGuideId } from "@/lib/blueprint/section-guides";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -31,12 +33,14 @@ export function SiteWideChecklist({ clientId, data }: SiteWideChecklistProps) {
 
       <ChecklistSection
         title="E-E-A-T & Trust (§6.4)"
+        guideId="onpage.eeat"
         clientId={clientId}
         items={eatItems}
         data={data}
       />
       <ChecklistSection
         title="Conversion Rate Optimization (§6.5)"
+        guideId="onpage.cro"
         clientId={clientId}
         items={croItems}
         data={data}
@@ -47,11 +51,13 @@ export function SiteWideChecklist({ clientId, data }: SiteWideChecklistProps) {
 
 function ChecklistSection({
   title,
+  guideId,
   clientId,
   items,
   data,
 }: {
   title: string;
+  guideId: SectionGuideId;
   clientId: string;
   items: typeof SITE_WIDE_CHECKLIST;
   data: SiteChecklistData;
@@ -59,6 +65,7 @@ function ChecklistSection({
   return (
     <section className="space-y-3">
       <h3 className="text-sm font-medium">{title}</h3>
+      <SectionGuide guideId={guideId} />
       <ul className="space-y-2">
         {items.map((item) => {
           const value = data[item.itemKey];

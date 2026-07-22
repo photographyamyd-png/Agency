@@ -2,10 +2,17 @@ import Link from "next/link";
 import type { ClientWorkspaceData } from "@/lib/data/client-workspace";
 import { computePhaseProgress } from "@/lib/blueprint/phase-progress";
 import { canAccessWorkflowTab } from "@/lib/blueprint/workflow";
-import { emptyBaselineAudit } from "@/lib/blueprint/phase-1-intake";
+import {
+  BASELINE_AUDIT_ITEMS,
+  emptyBaselineAudit,
+} from "@/lib/blueprint/phase-1-intake";
 import { baselineAuditDataSchema } from "@/lib/validation/blueprint";
 import { ClientPortalInviteForm } from "@/components/clients/portal-invite-form";
 import { BaselineAuditWizard } from "@/components/clients/baseline-audit-wizard";
+import { BaselineReportPanel } from "@/components/clients/baseline-report-panel";
+import { BaselineReportView, VsBaselineView } from "@/components/reports/baseline-report-view";
+import type { BaselineSnapshot } from "@/lib/reports/baseline-snapshot";
+import type { VsBaseline } from "@/lib/reports/highlights";
 import { BusinessIntelForm } from "@/components/clients/business-intel-form";
 import { CompetitorAudit } from "@/components/clients/competitor-audit";
 import { KeywordManager } from "@/components/clients/keyword-manager";
@@ -18,6 +25,7 @@ import { ReviewEngine } from "@/components/clients/review-engine";
 import { LinksGeoPanel } from "@/components/clients/links-geo-panel";
 import { VaultPanel } from "@/components/clients/vault-panel";
 import { MaintenancePanel } from "@/components/clients/maintenance-panel";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { PhaseProgress, QuickReferencePanel } from "@/components/clients/phase-progress";
 import { BlueprintWorkflowGuide } from "@/components/clients/blueprint-workflow-guide";
 import { WorkflowTabNav } from "@/components/clients/workflow-tab-nav";
@@ -54,6 +62,32 @@ export function ClientWorkspaceTabs({ client, activeTab, browseMode = false }: C
   const siteUrl = client.brandProfile?.existingSiteUrl ?? client.brandProfile?.domain
     ? `https://${client.brandProfile.domain}`
     : null;
+
+  const checklistDone = Object.values(auditData).filter(
+    (v) => v.status === "done" || v.status === "na"
+  ).length;
+  const hasGoogle = client.integrations.some(
+    (i) =>
+      i.status === "CONNECTED" &&
+      (i.service === "GA4" ||
+        i.service === "GOOGLE_SEARCH_CONSOLE" ||
+        i.service === "GBP")
+  );
+  const hasPagespeed = client.techHealthLogs.length > 0;
+  const session = client.onboardingSessions[0];
+  const stages = Array.isArray(session?.completedStages)
+    ? (session.completedStages as string[])
+    : [];
+  const accessDone =
+    session?.status === "COMPLETED" ||
+    stages.includes("ACCESS") ||
+    stages.includes("COMPLETED");
+  const hasSite =
+    !!(client.brandProfile?.existingSiteUrl || client.brandProfile?.domain);
+  const baselineReady =
+    hasSite &&
+    (hasGoogle || hasPagespeed) &&
+    (checklistDone / BASELINE_AUDIT_ITEMS.length >= 0.5 || accessDone);
 
   const flatPages = client.pages.flatMap((p) => [p, ...p.children]);
 
@@ -109,6 +143,11 @@ export function ClientWorkspaceTabs({ client, activeTab, browseMode = false }: C
       {access.allowed && effectiveTab === "intake" && (
         <div className="space-y-8">
           <OnboardingProgressPanel client={client} />
+          <BaselineReportPanel
+            clientId={client.id}
+            report={client.baselineReport}
+            ready={baselineReady}
+          />
           <BusinessIntelForm clientId={client.id} data={intel} />
           <BaselineAuditWizard clientId={client.id} auditData={auditData} siteUrl={siteUrl} />
         </div>
@@ -188,9 +227,56 @@ export function ClientWorkspaceTabs({ client, activeTab, browseMode = false }: C
 
       {access.allowed && effectiveTab === "reports" && (
         <div className="space-y-8">
+          <SectionGuide guideId="reports.tab" />
           <MaintenancePanel checklist={client.maintenanceLogs[0] ?? null} />
+
+          <section className="space-y-3">
+            <h3 className="text-sm font-medium">Baseline starting report</h3>
+            <SectionGuide guideId="reports.baseline" />
+            {client.baselineReport ? (
+              <BaselineReportView
+                summary={client.baselineReport.summary}
+                highlights={(client.baselineReport.highlights as string[]) ?? []}
+                snapshot={client.baselineReport.dataJson as unknown as BaselineSnapshot}
+                createdAt={client.baselineReport.createdAt}
+                sentAt={client.baselineReport.sentAt}
+              />
+            ) : (
+              <p className="text-sm text-muted">
+                No baseline yet — generate one from Intake & Baseline.
+              </p>
+            )}
+          </section>
+
+          <section>
+            <h3 className="text-sm font-medium mb-3">Monthly Reports</h3>
+            <SectionGuide guideId="reports.monthly" />
+            <ul className="space-y-3">
+              {client.monthlyReports.map((r) => {
+                const data = r.dataJson as {
+                  highlights?: string[];
+                  vsBaseline?: VsBaseline | null;
+                } | null;
+                return (
+                  <li key={r.id} className="rounded-xl border border-border-bright bg-surface-raised p-4 text-sm">
+                    <p className="font-medium">
+                      {new Date(r.periodStart).toLocaleDateString()} –{" "}
+                      {new Date(r.periodEnd).toLocaleDateString()}
+                    </p>
+                    {r.summary && <p className="mt-1 text-muted">{r.summary}</p>}
+                    {data?.vsBaseline && <VsBaselineView vs={data.vsBaseline} />}
+                  </li>
+                );
+              })}
+              {client.monthlyReports.length === 0 && (
+                <p className="text-sm text-muted">No monthly reports yet.</p>
+              )}
+            </ul>
+          </section>
+
           <section>
             <h3 className="text-sm font-medium mb-3">Weekly Reports</h3>
+            <SectionGuide guideId="reports.weekly" />
             <ul className="space-y-3">
               {client.weeklyReports.map((r) => {
                 const highlights = (r.highlights as string[] | null) ?? [];
@@ -214,13 +300,14 @@ export function ClientWorkspaceTabs({ client, activeTab, browseMode = false }: C
       )}
 
       {effectiveTab === "portal" && (
-        <div className="rounded-xl border border-border-bright bg-surface-raised p-6 max-w-lg">
+        <div className="rounded-xl border border-border-bright bg-surface-raised p-6 max-w-lg space-y-4">
+          <SectionGuide guideId="portal.tab" />
           {client.portalUser ? (
-            <p className="text-sm text-muted mb-4">
+            <p className="text-sm text-muted">
               Portal user: <span className="text-foreground">{client.portalUser.email}</span>
             </p>
           ) : (
-            <p className="text-sm text-muted mb-4">No portal account yet.</p>
+            <p className="text-sm text-muted">No portal account yet.</p>
           )}
           <ClientPortalInviteForm clientId={client.id} />
         </div>

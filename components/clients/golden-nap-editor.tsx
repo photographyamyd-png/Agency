@@ -1,4 +1,5 @@
 import { saveGoldenNap } from "@/lib/actions/citations";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +46,7 @@ export function GoldenNapEditor({ clientId, goldenNap }: GoldenNapEditorProps) {
       className="space-y-4"
     >
       <h3 className="text-sm font-medium">Golden Record NAP (§8.1)</h3>
+      <SectionGuide guideId="citations.goldenNap" />
       <p className="text-xs text-muted">Lock this before submitting citations or schema. Format must be identical everywhere.</p>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="businessName" placeholder="Business name (legal)" defaultValue={nap?.businessName ?? ""} required />

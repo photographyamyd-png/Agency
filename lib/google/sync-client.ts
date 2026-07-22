@@ -133,27 +133,6 @@ export async function syncClientGoogleData(clientId: string) {
         payload: { keywordCount: keywords.length },
       });
 
-      const baseline = await prisma.baselineAudit.findFirst({
-        where: { clientId },
-        orderBy: { capturedAt: "asc" },
-      });
-      if (!baseline) {
-        const rankings: Record<string, number> = {};
-        for (const kw of keywords) {
-          const snap = await prisma.rankSnapshot.findFirst({
-            where: { keywordId: kw.id },
-            orderBy: { capturedAt: "asc" },
-          });
-          if (snap?.rank) rankings[kw.term] = snap.rank;
-        }
-        await prisma.baselineAudit.create({
-          data: {
-            clientId,
-            dataJson: { rankings, capturedAt: new Date().toISOString() },
-          },
-        });
-      }
-
       results.push("GSC synced");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "GSC sync failed";
@@ -204,6 +183,13 @@ export async function syncClientGoogleData(clientId: string) {
       });
       results.push(`GBP error: ${msg}`);
     }
+  }
+
+  try {
+    const { maybeAutoGenerateBaselineReport } = await import("@/lib/reports/generate");
+    await maybeAutoGenerateBaselineReport(clientId);
+  } catch {
+    // non-fatal — sync succeeded even if baseline auto-gen fails
   }
 
   return { results };

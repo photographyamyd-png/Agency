@@ -1,6 +1,9 @@
 import type { MaintenanceChecklist, MaintenanceChecklistItem } from "@prisma/client";
 import { updateMaintenanceItem } from "@/lib/actions/maintenance";
 import { QA_CHECKLIST_ITEMS } from "@/lib/blueprint/monthly-sops";
+import { getMonthlySopPlaybook } from "@/lib/blueprint/checklist-playbooks";
+import { ChecklistPlaybookDetails } from "@/components/clients/checklist-playbook";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -14,13 +17,19 @@ interface MaintenancePanelProps {
 
 export function MaintenancePanel({ checklist }: MaintenancePanelProps) {
   if (!checklist) {
-    return <p className="text-sm text-muted">Monthly maintenance checklist will auto-generate on the 1st.</p>;
+    return (
+      <div className="space-y-3">
+        <SectionGuide guideId="reports.maintenance" />
+        <p className="text-sm text-muted">Monthly maintenance checklist will auto-generate on the 1st.</p>
+      </div>
+    );
   }
 
   const done = checklist.items.filter((i) => i.status === "DONE").length;
 
   return (
     <div className="space-y-6">
+      <SectionGuide guideId="reports.maintenance" />
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted">
           {checklist.periodMonth}/{checklist.periodYear} — {done}/{checklist.items.length} complete
@@ -31,19 +40,28 @@ export function MaintenancePanel({ checklist }: MaintenancePanelProps) {
       </div>
 
       <ul className="space-y-2">
-        {checklist.items.map((item) => (
-          <li key={item.id} className="flex items-center justify-between rounded-lg border border-border-bright bg-surface-raised px-4 py-3 text-sm">
-            <div>
-              <Badge variant="muted" className="mr-2 text-xs">{item.category}</Badge>
-              <span className={item.status === "DONE" ? "line-through text-muted" : ""}>{item.label}</span>
-            </div>
-            {item.status !== "DONE" && (
-              <form action={async () => { "use server"; await updateMaintenanceItem(item.id, "DONE"); }}>
-                <Button type="submit" size="sm" variant="outline" className="h-7">Done</Button>
-              </form>
-            )}
-          </li>
-        ))}
+        {checklist.items.map((item) => {
+          const playbook = getMonthlySopPlaybook(item.label);
+          return (
+            <li
+              key={item.id}
+              className="rounded-lg border border-border-bright bg-surface-raised px-4 py-3 text-sm space-y-2"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Badge variant="muted" className="mr-2 text-xs">{item.category}</Badge>
+                  <span className={item.status === "DONE" ? "line-through text-muted" : ""}>{item.label}</span>
+                </div>
+                {item.status !== "DONE" && (
+                  <form action={async () => { "use server"; await updateMaintenanceItem(item.id, "DONE"); }}>
+                    <Button type="submit" size="sm" variant="outline" className="h-7">Done</Button>
+                  </form>
+                )}
+              </div>
+              {playbook && <ChecklistPlaybookDetails playbook={playbook} />}
+            </li>
+          );
+        })}
       </ul>
 
       <section className="space-y-2">

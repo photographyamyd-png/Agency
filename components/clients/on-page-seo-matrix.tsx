@@ -4,6 +4,7 @@ import { createSchemaFromTemplate } from "@/lib/actions/schema";
 import { SCHEMA_TEMPLATES } from "@/lib/blueprint/schema-templates";
 import { ON_PAGE_SEO_CHECKLIST } from "@/lib/blueprint/seo-checklist-keys";
 import { SiteWideChecklist } from "@/components/clients/site-wide-checklist";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { emptySiteChecklist, type SiteChecklistData } from "@/lib/blueprint/site-checklist";
 import { siteChecklistDataSchema } from "@/lib/validation/blueprint";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function OnPageSeoMatrix({ clientId, pages, siteChecklistRaw }: OnPageSeo
 
   return (
     <div className="space-y-6">
+      <SectionGuide guideId="onpage.matrix" />
       <div className="rounded-lg border border-border-bright bg-surface-raised p-4 text-sm text-muted">
         <p className="font-medium text-foreground mb-1">Metadata formulas (§6.1)</p>
         <p>Title: Primary Service + Location | Benefit | Brand (under 60 chars)</p>

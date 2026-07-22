@@ -2,6 +2,7 @@ import type { GBPActivityLog } from "@prisma/client";
 import { logGbpActivity } from "@/lib/actions/citations";
 import { GBP_GOVERNANCE_CHECKLIST, GBP_CONTENT_CHECKLIST, GBP_ONGOING_SOPS } from "@/lib/blueprint/gbp-sops";
 import { GbpUtmBuilder } from "@/components/clients/gbp-utm-builder";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ export function GbpHub({ clientId, gbpActivity, gbpConnected, siteUrl }: GbpHubP
 
   return (
     <div className="space-y-8">
+      <SectionGuide guideId="gbp.tab" />
       <div className="flex items-center gap-4 text-sm">
         <Badge variant={gbpConnected ? "success" : "warning"}>
           {gbpConnected ? "GBP connected" : "GBP not connected"}
@@ -30,10 +32,12 @@ export function GbpHub({ clientId, gbpActivity, gbpConnected, siteUrl }: GbpHubP
         <span className="text-muted">{postsThisMonth} posts logged this month (target: 8–12)</span>
       </div>
 
+      <SectionGuide guideId="gbp.utm" />
       <GbpUtmBuilder defaultBaseUrl={siteUrl ?? ""} />
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Profile Governance (§7.1)</h3>
+        <SectionGuide guideId="gbp.governance" />
         <ul className="space-y-1">
           {GBP_GOVERNANCE_CHECKLIST.map((item) => (
             <li key={item.key} className="text-sm text-muted flex items-center gap-2">
@@ -46,6 +50,7 @@ export function GbpHub({ clientId, gbpActivity, gbpConnected, siteUrl }: GbpHubP
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Content Optimization (§7.2)</h3>
+        <SectionGuide guideId="gbp.content" />
         <ul className="space-y-1">
           {GBP_CONTENT_CHECKLIST.map((item) => (
             <li key={item.key} className="text-sm text-muted flex items-center gap-2">
@@ -97,11 +102,12 @@ export function GbpHub({ clientId, gbpActivity, gbpConnected, siteUrl }: GbpHubP
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Ongoing SOPs (§7.4)</h3>
+        <SectionGuide guideId="gbp.sops" />
         {GBP_ONGOING_SOPS.map((sop) => (
-          <p key={sop.label} className="text-sm text-muted">
+          <div key={sop.label} className="text-sm text-muted">
             <Badge variant="muted" className="mr-2 text-xs">{sop.frequency}</Badge>
             {sop.label}
-          </p>
+          </div>
         ))}
       </section>
     </div>
