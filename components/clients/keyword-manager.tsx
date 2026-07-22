@@ -1,6 +1,7 @@
 import type { Keyword, KeywordIntent, PageNode } from "@prisma/client";
 import { createKeyword, updateKeywordIntent, deleteKeyword } from "@/lib/actions/keywords";
 import { suggestKeywordPhrases } from "@/lib/blueprint/keyword-helpers";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export function KeywordManager({
 
   return (
     <div className="space-y-6">
+      <SectionGuide guideId="keywords.tab" />
       <form action={createKeyword} className="flex flex-wrap gap-2 items-end">
         <input type="hidden" name="clientId" value={clientId} />
         <Input name="term" placeholder="Keyword phrase" className="max-w-xs" required />

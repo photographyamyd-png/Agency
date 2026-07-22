@@ -618,6 +618,13 @@ export async function completeAccessStage(input: {
     payload: { sessionId: input.sessionId, clientStatus: status },
   });
 
+  try {
+    const { maybeAutoGenerateBaselineReport } = await import("@/lib/reports/generate");
+    await maybeAutoGenerateBaselineReport(input.clientId);
+  } catch {
+    // non-fatal
+  }
+
   return { nextStage: "COMPLETED" as const, clientStatus: status };
 }
 

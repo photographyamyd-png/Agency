@@ -14,7 +14,7 @@ export const CITATION_DIRECTORIES: CitationDirectory[] = [
   { directory: "Yelp Business Listing", tier: "TIER_1", url: "https://biz.yelp.com" },
   { directory: "Foursquare", tier: "TIER_2", url: "https://foursquare.com" },
   { directory: "Data Axle / Infogroup", tier: "TIER_2", url: "https://www.dataaxleusa.com" },
-  { directory: "Neustar Localeze", tier: "TIER_2" },
+  { directory: "Neustar Localeze", tier: "TIER_2", url: "https://www.localeze.com" },
   { directory: "LinkedIn Company Page", tier: "TIER_3", url: "https://www.linkedin.com" },
   { directory: "YouTube Channel", tier: "TIER_3", url: "https://www.youtube.com" },
   { directory: "Better Business Bureau", tier: "TIER_3", url: "https://www.bbb.org" },

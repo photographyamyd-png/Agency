@@ -54,6 +54,13 @@ export async function runPageSpeedForClient(clientId: string, url: string) {
     },
   });
 
+  try {
+    const { maybeAutoGenerateBaselineReport } = await import("@/lib/reports/generate");
+    await maybeAutoGenerateBaselineReport(clientId);
+  } catch {
+    // non-fatal
+  }
+
   revalidatePath(`/clients/${clientId}`);
   return { success: true, result };
 }

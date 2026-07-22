@@ -4,6 +4,7 @@ import { submitPageForIndexing, markPageIndexed } from "@/lib/actions/indexing";
 import { TECHNICAL_AUDIT_CHECKLIST } from "@/lib/blueprint/seo-checklist-keys";
 import { PAGE_TYPE_LABELS } from "@/lib/blueprint/page-templates";
 import { runPageSpeedAction } from "@/lib/actions/pagespeed";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,8 @@ export function SitemapBuilder({ clientId, pages, techHealthLogs, siteUrl }: Sit
             </form>
           )}
         </div>
+
+        <SectionGuide guideId="sitemap.architecture" />
 
         {locationPages.length > 1 && (
           <p className="text-xs text-amber-600 dark:text-amber-400 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
@@ -129,6 +132,7 @@ export function SitemapBuilder({ clientId, pages, techHealthLogs, siteUrl }: Sit
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium">Technical Audit (§5)</h3>
+        <SectionGuide guideId="sitemap.technical" />
         {latestTech && (
           <div className="grid gap-4 sm:grid-cols-4 text-sm">
             <div className="rounded-lg border border-border-bright bg-surface-raised p-4">

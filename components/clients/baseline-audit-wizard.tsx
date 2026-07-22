@@ -1,6 +1,7 @@
 import { BASELINE_AUDIT_ITEMS } from "@/lib/blueprint/phase-1-intake";
 import { saveBaselineAuditItem } from "@/lib/actions/baseline-audit";
 import { runPageSpeedAction } from "@/lib/actions/pagespeed";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ export function BaselineAuditWizard({ clientId, auditData, siteUrl }: BaselineAu
 
   return (
     <div className="space-y-6">
+      <SectionGuide guideId="intake.baseline" />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
           {doneCount} of {BASELINE_AUDIT_ITEMS.length} baseline items complete

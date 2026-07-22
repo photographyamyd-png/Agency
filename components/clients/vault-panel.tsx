@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CredentialVaultEntry } from "@prisma/client";
 import { createVaultEntry, revealVaultEntry, revokeVaultEntry } from "@/lib/actions/vault";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -40,6 +41,7 @@ export function VaultPanel({ clientId, entries }: VaultPanelProps) {
 
   return (
     <div className="space-y-6">
+      <SectionGuide guideId="vault.tab" />
       <p className="text-sm text-muted">Admin-only credential vault. All access is logged.</p>
 
       <form action={createVaultEntry} className="rounded-lg border border-border-bright bg-surface-raised p-4 space-y-3 max-w-lg">

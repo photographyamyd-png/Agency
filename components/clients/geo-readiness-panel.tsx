@@ -1,6 +1,7 @@
 import { saveGeoReadinessItem } from "@/lib/actions/site-checklist";
 import { GEO_READINESS_CHECKLIST } from "@/lib/blueprint/geo-checklist";
 import type { GeoReadinessData } from "@/lib/blueprint/geo-readiness";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +21,7 @@ export function GeoReadinessPanel({ clientId, data }: GeoReadinessPanelProps) {
           {doneCount}/{GEO_READINESS_CHECKLIST.length} complete
         </p>
       </div>
+      <SectionGuide guideId="links.geo" />
       <ul className="space-y-2">
         {GEO_READINESS_CHECKLIST.map((item) => {
           const value = data[item.key];

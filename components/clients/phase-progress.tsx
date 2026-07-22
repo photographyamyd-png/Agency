@@ -1,5 +1,6 @@
 import { MASTER_QUICK_REFERENCE } from "@/lib/blueprint/quick-reference";
 import { BLUEPRINT_PHASES } from "@/lib/blueprint/phases";
+import { SectionGuide } from "@/components/clients/section-guide";
 
 interface PhaseProgressProps {
   phaseCompletion: Record<string, number>;
@@ -9,6 +10,7 @@ export function PhaseProgress({ phaseCompletion }: PhaseProgressProps) {
   return (
     <div className="rounded-xl border border-border-bright bg-surface-raised p-6 space-y-4">
       <h3 className="text-sm font-medium">Blueprint Phase Progress</h3>
+      <SectionGuide guideId="overview.phases" />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {BLUEPRINT_PHASES.map((phase) => {
           const pct = phaseCompletion[phase.id] ?? 0;
@@ -33,6 +35,7 @@ export function QuickReferencePanel() {
   return (
     <div className="rounded-xl border border-border-bright bg-surface-raised p-6 space-y-4">
       <h3 className="text-sm font-medium">Master Quick-Reference (§15)</h3>
+      <SectionGuide guideId="overview.quickRef" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MASTER_QUICK_REFERENCE.map((pillar) => (
           <details key={pillar.pillar} className="text-sm">

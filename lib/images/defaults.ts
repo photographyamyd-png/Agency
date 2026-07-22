@@ -1,24 +1,22 @@
 export const DEFAULT_IMAGES = {
-  hero: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&q=85",
-  heroAlt: "Construction crew on a jobsite — mud, boots, real work",
-  auth: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=80",
+  hero: "/images/marketing/stuart/hero-jobsite.jpg",
+  heroAlt: "Bobcat track loader on a real jobsite — the work Amy builds sites for",
+  auth: "/images/marketing/stuart/about-portrait.jpg",
   services: {
-    WEBSITE:
-      "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1200&q=85",
-    SEO: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=85",
-    REPORTING:
-      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=85",
+    WEBSITE: "/images/marketing/stuart/hero-jobsite.jpg",
+    SEO: "/images/marketing/stuart/footer-note.jpg",
+    REPORTING: "/images/marketing/stuart/about-extra.jpg",
   },
   results: [
-    "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1200&q=85",
-    "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=85",
+    "/images/marketing/stuart/hero-jobsite.jpg",
+    "/images/marketing/stuart/about-extra.jpg",
   ],
-  trades:
-    "https://images.unsplash.com/photo-1504148455320-c376907d081c?w=1200&q=85",
-  tradesAlt: "Welder on a jobsite — the kind of business I build websites for",
-  chickens:
-    "https://images.unsplash.com/photo-1548558960-f6787264f4cc?w=400&q=85",
-  chickensAlt: "Amy's backyard chickens",
+  trades: "/images/marketing/stuart/about-portrait.jpg",
+  tradesAlt: "Jobsite equipment — the kind of business I build websites for",
+  chickens: "/images/marketing/stuart/footer-note.jpg",
+  chickensAlt: "Hands on the controls — real work, real clients",
+  midCtaVideo: "/videos/marketing/mid-cta.mp4?v=2",
+  midCtaPoster: "/images/marketing/stuart/mid-cta-poster.jpg",
 } as const;
 
 export type ServicesImages = {
@@ -74,7 +72,12 @@ export function resolveResultsImages(images?: string[] | null) {
 }
 
 export function resolveTradesImage(url?: string | null) {
-  if (!url || url.includes("1573497019940") || isBrokenImageUrl(url)) {
+  if (
+    !url ||
+    url.includes("1573497019940") ||
+    url.includes("unsplash.com") ||
+    isBrokenImageUrl(url)
+  ) {
     return DEFAULT_IMAGES.trades;
   }
   return url;
@@ -85,7 +88,10 @@ export function resolveTradesAlt(alt?: string | null) {
 }
 
 export function resolveChickenImage(url?: string | null) {
-  if (url && !isBrokenImageUrl(url)) return url;
+  // Prefer Stuart stills over legacy Unsplash chicken shots
+  if (url && !isBrokenImageUrl(url) && !url.includes("unsplash.com") && !url.includes("1548558960")) {
+    return url;
+  }
   return DEFAULT_IMAGES.chickens;
 }
 

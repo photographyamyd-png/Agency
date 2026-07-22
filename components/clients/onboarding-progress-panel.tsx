@@ -6,6 +6,7 @@ import {
 } from "@/lib/onboarding/stages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { formatCurrency } from "@/lib/format";
 import type { OnboardingStage, OnboardingSessionStatus, ProposalStatus } from "@prisma/client";
 
@@ -75,6 +76,7 @@ export function OnboardingProgressPanel({
         <h3 className="text-sm font-semibold">Client onboarding</h3>
         <Badge variant="muted">{client.status}</Badge>
       </div>
+      <SectionGuide guideId="intake.onboarding" />
 
       {!session ? (
         <p className="text-sm text-muted">
@@ -151,16 +153,16 @@ export function OnboardingProgressPanel({
           <p className="text-xs uppercase tracking-wide text-muted">Agreement</p>
           {latestProposal ? (
             <>
-              <p>
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={latestProposal.status === "SIGNED" ? "success" : "muted"}>
                   {latestProposal.status}
                 </Badge>
                 {latestProposal.signedAt && (
-                  <span className="text-muted ml-2">
+                  <span className="text-muted">
                     {latestProposal.signedAt.toLocaleDateString()}
                   </span>
                 )}
-              </p>
+              </div>
               <p className="text-muted">
                 {latestProposal.lineItems.length} line item(s) ·{" "}
                 {formatCurrency(

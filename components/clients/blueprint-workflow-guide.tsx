@@ -7,6 +7,7 @@ import {
 } from "@/lib/blueprint/workflow";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 
@@ -64,6 +65,7 @@ export function BlueprintWorkflowGuide({
 
   return (
     <div className="rounded-xl border border-border-bright bg-surface-raised p-6 space-y-4">
+      <SectionGuide guideId="overview.workflow" />
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-medium">Blueprint delivery path</h3>

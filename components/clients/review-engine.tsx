@@ -1,5 +1,6 @@
 import type { ReviewSnapshot } from "@prisma/client";
 import { saveReviewTargets } from "@/lib/actions/citations";
+import { SectionGuide } from "@/components/clients/section-guide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ export function ReviewEngine({ clientId, reviewSnapshots, reviewTargets }: Revie
 
   return (
     <div className="space-y-8">
+      <SectionGuide guideId="reviews.tab" />
       <div className="grid gap-4 sm:grid-cols-3 text-sm">
         <div className="rounded-lg border border-border-bright bg-surface-raised p-4">
           <p className="text-muted text-xs">Latest rating</p>
@@ -63,6 +65,7 @@ export function ReviewEngine({ clientId, reviewSnapshots, reviewTargets }: Revie
         className="space-y-4 rounded-lg border border-border-bright bg-surface-raised p-4"
       >
         <h3 className="text-sm font-medium">Review Request System (§9.2)</h3>
+        <SectionGuide guideId="reviews.request" />
         <div className="grid gap-3 sm:grid-cols-2">
           <Input name="monthlyTarget" type="number" placeholder="Monthly target (5-15)" defaultValue={targets?.monthlyTarget ?? 5} />
           <Input name="minimumBeforeWork" type="number" placeholder="Min reviews before work (10)" defaultValue={targets?.minimumBeforeWork ?? 10} />
@@ -89,6 +92,7 @@ export function ReviewEngine({ clientId, reviewSnapshots, reviewTargets }: Revie
 
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Response Protocol (§9.4)</h3>
+        <SectionGuide guideId="reviews.response" />
         <p className="text-sm text-muted">Respond to every review within 24 hours. Never copy-paste identical templates.</p>
         <Badge variant="warning">24h SLA — check GBP dashboard weekly</Badge>
       </section>
